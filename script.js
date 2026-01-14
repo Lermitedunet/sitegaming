@@ -1,7 +1,7 @@
 // Gaming Hub - JavaScript
 // Système de filtrage des jeux avec sélection multiple
 
-console.log('Gaming Hub chargé avec succès !');
+console.log("[LMD] script.js version:", "2026-01-14-a");
 
 // ============================================
 // INPUT MODALITY DETECTOR - FIX HALO SPONSOR AU CLIC
@@ -19,9 +19,17 @@ console.log('Gaming Hub chargé avec succès !');
   window.addEventListener('pointerdown', () => set('mouse'), true);
   window.addEventListener('mousedown', () => set('mouse'), true);
 
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Tab' || e.key.startsWith('Arrow')) set('keyboard');
+  window.addEventListener("keydown", (e) => {
+    // ✅ guard absolu - vérification renforcée
+    if (!e || !e.key || typeof e.key !== "string" || e.key.length === 0) return;
+
+    // garder la logique existante (Tab / Arrow...)
+    if (e.key === "Tab" || e.key.startsWith("Arrow")) {
+      set("keyboard");
+    }
   }, true);
+
+  console.log("[LMD] InputModality patched");
 })();
 
 
@@ -739,6 +747,12 @@ function filterGames(games = null) {
     if (!games) {
         games = getGamesData();
     }
+
+    // PATCH: Vérifier que games est un array avant d'utiliser filter
+    if (!Array.isArray(games)) {
+        return [];
+    }
+
     return games.filter(game => {
         // Vérifier les consoles
         // Si aucune console sélectionnée, on accepte tous les jeux
@@ -1046,16 +1060,29 @@ document.addEventListener('click', function(e) {
 }, true);
 
 // Appliquer le tri au chargement
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(applySortAndFilters, 100); // Petit délai pour s'assurer que les filtres sont appliqués
+// PATCH: Guard pour éviter les initialisations catalogue sur login.html et signup.html
+const __page = (location.pathname.split("/").pop() || "").toLowerCase();
+const __isAuthPage = (__page === "login.html" || __page === "signup.html");
+
+if (!__isAuthPage) {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(applySortAndFilters, 100); // Petit délai pour s'assurer que les filtres sont appliqués
+            renderHomePromos(); // ADDED: Afficher les promos sur la page principale
+            updateAuthButtons(); // ADDED: Mettre à jour les boutons d'authentification
+        });
+    } else {
+        setTimeout(applySortAndFilters, 100);
         renderHomePromos(); // ADDED: Afficher les promos sur la page principale
         updateAuthButtons(); // ADDED: Mettre à jour les boutons d'authentification
-    });
+    }
 } else {
-    setTimeout(applySortAndFilters, 100);
-    renderHomePromos(); // ADDED: Afficher les promos sur la page principale
-    updateAuthButtons(); // ADDED: Mettre à jour les boutons d'authentification
+    // Sur login.html et signup.html, seulement updateAuthButtons
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', updateAuthButtons);
+    } else {
+        updateAuthButtons();
+    }
 }
 
 // ============================================

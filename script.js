@@ -995,8 +995,12 @@ function applySortAndFilters() {
         return;
     }
     
+    // PATCH: Sécuriser getGamesData() contre undefined
+    const gamesData = getGamesData();
+    const safeGamesData = Array.isArray(gamesData) ? gamesData : [];
+
     // ADDED: Filtrer les jeux depuis getGamesData() (pas d'accès direct à loadedGames)
-    let filteredGames = filterGames(getGamesData());
+    let filteredGames = filterGames(safeGamesData);
     
     // Appliquer le tri selon currentSort
     switch (currentSort) {
@@ -19906,8 +19910,19 @@ function updateAuthButtons() {
     const authButtonsContainer = document.getElementById('headerAuthButtons');
     if (!authButtonsContainer) return;
 
+    // PATCH: Vérifier que Firebase est disponible
+    const fb = window.fb;
+    if (!fb || typeof fb.onAuthStateChanged !== "function") {
+        // Firebase pas dispo => fallback UI "non connecté"
+        authButtonsContainer.innerHTML = `
+            <a href="login.html" class="btn btn-outline" style="font-size: 0.875em;">Se connecter</a>
+            <a href="signup.html" class="btn btn-primary" style="font-size: 0.875em;">S'inscrire</a>
+        `;
+        return;
+    }
+
     // Écouter les changements d'état d'authentification Firebase
-    window.fb.onAuthStateChanged(window.fb.auth, (user) => {
+    fb.onAuthStateChanged(fb.auth, (user) => {
         if (user) {
             // Utilisateur connecté
             authButtonsContainer.innerHTML = `
@@ -19918,7 +19933,7 @@ function updateAuthButtons() {
             const logoutBtn = document.getElementById('btn-logout');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', function() {
-                    window.fb.signOut(window.fb.auth).then(() => {
+                    fb.signOut(fb.auth).then(() => {
                         window.location.href = 'index.html';
                     }).catch((error) => {
                         console.error('Erreur lors de la déconnexion:', error);

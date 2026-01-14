@@ -754,34 +754,39 @@ function filterGames(games = null) {
     }
 
     return games.filter(game => {
+        // PATCH: Normaliser les propriétés du jeu pour éviter les erreurs "undefined"
+        const safePlatforms = Array.isArray(game.platforms) ? game.platforms : [];
+        const safeGenres = Array.isArray(game.genres) ? game.genres : [];
+        const safeTitle = (typeof game.title === "string") ? game.title : "";
+
         // Vérifier les consoles
         // Si aucune console sélectionnée, on accepte tous les jeux
         let consoleMatch = true;
         if (selectedConsoles.length > 0) {
             // Convertir les plateformes du jeu en minuscules pour comparaison
-            const gamePlatforms = game.platforms.map(p => p.toLowerCase());
+            const gamePlatforms = safePlatforms.map(p => p.toLowerCase());
             // Le jeu doit avoir AU MOINS une plateforme dans selectedConsoles
-            consoleMatch = gamePlatforms.some(platform => 
+            consoleMatch = gamePlatforms.some(platform =>
                 selectedConsoles.includes(platform.toLowerCase())
             );
         }
-        
+
         // Vérifier les genres
         // Si aucun genre sélectionné, on accepte tous les jeux
         let genreMatch = true;
         if (selectedGenres.length > 0) {
             // Convertir les genres du jeu en minuscules pour comparaison
-            const gameGenres = game.genres.map(g => g.toLowerCase());
+            const gameGenres = safeGenres.map(g => g.toLowerCase());
             // Le jeu doit avoir AU MOINS un genre dans selectedGenres
-            genreMatch = gameGenres.some(genre => 
+            genreMatch = gameGenres.some(genre =>
                 selectedGenres.includes(genre.toLowerCase())
             );
         }
-        
+
         // Vérifier la recherche par nom
         let searchMatch = true;
         if (searchText.trim() !== '') {
-            const gameTitle = game.title.toLowerCase();
+            const gameTitle = safeTitle.toLowerCase();
             searchMatch = gameTitle.includes(searchText.toLowerCase());
         }
         
@@ -6235,36 +6240,43 @@ function renderGames(games, containerId = 'gamesGrid', options = {}) {
 
     // Fonction pour rendre un seul jeu
     function renderGameItem(game) {
+        // PATCH: Sécuriser les propriétés du jeu
+        const safePlatforms = Array.isArray(game.platforms) ? game.platforms : [];
+        const safeGenres = Array.isArray(game.genres) ? game.genres : [];
+        const safeTitle = (typeof game.title === "string") ? game.title : "";
+        const safeId = game.id || '';
+        const safeDescription = (typeof game.description === "string") ? game.description : '';
+
         // Convertir les plateformes et genres en minuscules pour les data-attributes (filtres)
-        const consoleAttr = game.platforms.map(p => p.toLowerCase()).join(' ');
-        const genreAttr = game.genres.map(g => g.toLowerCase()).join(' ');
+        const consoleAttr = safePlatforms.map(p => p.toLowerCase()).join(' ');
+        const genreAttr = safeGenres.map(g => g.toLowerCase()).join(' ');
 
         // ADDED: Gérer l'image (image ou placeholder)
         let imageHtml = '';
         if (game.image && game.image.trim()) {
-            imageHtml = `<img src="${game.image}" alt="${game.title}" loading="lazy">`;
+            imageHtml = `<img src="${game.image}" alt="${safeTitle}" loading="lazy">`;
         } else {
             imageHtml = `<div class="placeholder-image">
-                <span class="placeholder-text">${game.title.charAt(0).toUpperCase()}</span>
+                <span class="placeholder-text">${safeTitle.charAt(0).toUpperCase()}</span>
             </div>`;
         }
 
         // Rendre le HTML de la carte
         return `
-            <div class="game-card" data-console="${consoleAttr}" data-genre="${genreAttr}" data-game-id="${game.id}">
-                <a href="jeu.html?id=${game.id}" class="game-link">
+            <div class="game-card" data-console="${consoleAttr}" data-genre="${genreAttr}" data-game-id="${safeId}">
+                <a href="jeu.html?id=${safeId}" class="game-link">
                     <div class="game-image">
                         ${imageHtml}
                     </div>
                     <div class="game-content">
                         <div class="game-header">
-                            <h3 class="game-title">${game.title}</h3>
+                            <h3 class="game-title">${safeTitle}</h3>
                         </div>
-                        <p class="game-description">${game.description || ''}</p>
+                        <p class="game-description">${safeDescription}</p>
                         <div class="game-meta">
                             <div class="game-info">
-                                ${game.platforms && game.platforms.length > 0 ? `<span class="game-platforms">${game.platforms.join(', ')}</span>` : ''}
-                                ${game.genres && game.genres.length > 0 ? `<span class="game-genres">${game.genres.join(', ')}</span>` : ''}
+                                ${safePlatforms.length > 0 ? `<span class="game-platforms">${safePlatforms.join(', ')}</span>` : ''}
+                                ${safeGenres.length > 0 ? `<span class="game-genres">${safeGenres.join(', ')}</span>` : ''}
                                 ${game.studio ? `<span class="game-studio">${game.studio}</span>` : ''}
                             </div>
                         </div>

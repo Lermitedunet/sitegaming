@@ -22077,6 +22077,12 @@ function updateAuthButtons() {
   const fb = window.fb;
   if (!fb || typeof fb.onAuthStateChanged !== "function") {
     // Firebase pas dispo => fallback UI "non connecté"
+    // Assurer que les boutons login/signup sont visibles
+    const loginButtons = document.querySelectorAll('a[href="login.html"]');
+    const signupButtons = document.querySelectorAll('a[href="signup.html"]');
+    loginButtons.forEach(btn => btn.style.display = 'inline-flex');
+    signupButtons.forEach(btn => btn.style.display = 'inline-flex');
+
     authButtonsContainer.innerHTML = `
             <a href="login.html" class="btn btn-outline" style="font-size: 0.875em;">Se connecter</a>
             <a href="signup.html" class="btn btn-primary" style="font-size: 0.875em;">S'inscrire</a>
@@ -22086,7 +22092,15 @@ function updateAuthButtons() {
 
   // Écouter les changements d'état d'authentification Firebase
   fb.onAuthStateChanged(fb.auth, (user) => {
+    // Gestion de la visibilité des boutons statiques login/signup
+    const loginButtons = document.querySelectorAll('a[href="login.html"]');
+    const signupButtons = document.querySelectorAll('a[href="signup.html"]');
+
     if (user) {
+      // Utilisateur connecté - cacher les boutons login/signup
+      loginButtons.forEach(btn => btn.style.display = 'none');
+      signupButtons.forEach(btn => btn.style.display = 'none');
+
       // Utilisateur connecté
       const isAdmin = isAllowedAdmin(user.email);
       const adminButton = isAdmin ? `<a href="admin.html" class="btn btn-outline" style="font-size: 0.875em; margin-right: var(--spacing-sm);">Admin</a>` : '';
@@ -22112,6 +22126,10 @@ function updateAuthButtons() {
         });
       }
     } else {
+      // Utilisateur non connecté - afficher les boutons login/signup
+      loginButtons.forEach(btn => btn.style.display = 'inline-flex');
+      signupButtons.forEach(btn => btn.style.display = 'inline-flex');
+
       // Utilisateur non connecté (déjà géré par le HTML)
       authButtonsContainer.innerHTML = `
                 <a href="login.html" class="btn btn-outline" style="font-size: 0.875em;">Se connecter</a>

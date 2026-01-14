@@ -9,7 +9,7 @@ const firebaseConfig = {
   projectId: "sitegaming-firebase",
   storageBucket: "sitegaming-firebase.firebasestorage.app",
   messagingSenderId: "865972284818",
-  appId: "1:865972284818:web:5ee2a9ac762f23d649254b"
+  appId: "1:865972284818:web:bab288277f4d70d449254b"
 };
 
 // Initialize Firebase

@@ -1614,30 +1614,6 @@ window.debugState = {
   auditResults: null,
 };
 
-/**
- * Log debug avec buffer et console
- */
-function debugLog(scope, data, level = "info") {
-  if (!isDebug()) return;
-
-  const timestamp = new Date().toISOString().substring(11, 19);
-  const entry = {
-    timestamp,
-    scope,
-    data: typeof data === "object" ? JSON.stringify(data, null, 2) : data,
-    level,
-  };
-
-  window.debugState.logs.push(entry);
-
-  if (level === "error") {
-    window.debugState.errors.push(entry);
-  }
-
-  console.log(`[${timestamp}] [${scope}] ${entry.data}`);
-
-  updateDebugPanel();
-}
 
 /**
  * Met à jour le panneau debug admin
@@ -5538,26 +5514,33 @@ function isDebug() {
 }
 
 /**
- * Log debug avec buffer et console
+ * Log debug avec buffer et console (version bulletproof)
  */
-function debugLog(scope, data) {
-  if (!isDebug()) return;
+if (!window.debugLog) {
+  window.debugLog = function debugLog(scope, data, level = "info") {
+    if (!isDebug()) return;
 
-  const timestamp = new Date().toISOString().substring(11, 19);
-  const message = `[${timestamp}] [${scope}] ${typeof data === "object" ? JSON.stringify(data, null, 2) : data}`;
+    const timestamp = new Date().toISOString().substring(11, 19);
+    const message = `[${timestamp}] [${scope}] ${typeof data === "object" ? JSON.stringify(data, null, 2) : data}`;
 
-  console.log(message);
+    // Afficher différemment selon le niveau
+    if (level === "error") {
+      console.error(message);
+    } else {
+      console.log(message);
+    }
 
-  // Buffer pour overlay
-  if (!window.debugBuffer) window.debugBuffer = [];
-  window.debugBuffer.push({ scope, data, timestamp });
+    // Buffer pour overlay
+    if (!window.debugBuffer) window.debugBuffer = [];
+    window.debugBuffer.push({ scope, data, timestamp, level });
 
-  // Garder seulement les 50 derniers messages
-  if (window.debugBuffer.length > 50) {
-    window.debugBuffer = window.debugBuffer.slice(-50);
-  }
+    // Garder seulement les 50 derniers messages
+    if (window.debugBuffer.length > 50) {
+      window.debugBuffer = window.debugBuffer.slice(-50);
+    }
 
-  updateDebugOverlay();
+    updateDebugOverlay();
+  };
 }
 
 /**
@@ -8071,18 +8054,6 @@ function saveAuthUsers(users) {
   }
 }
 
-/**
- * Récupère la session utilisateur courante
- */
-function getAuthSession() {
-  const raw = localStorage.getItem(window.LMD.storageKeys.authSession);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch (e) {
-    return null;
-  }
-}
 
 /**
  * Sauvegarde la session utilisateur
@@ -8099,12 +8070,6 @@ function saveAuthSession(user) {
   }
 }
 
-/**
- * Supprime la session utilisateur
- */
-function clearAuthSession() {
-  localStorage.removeItem(window.LMD.storageKeys.authSession);
-}
 
 /**
  * Récupère les logs d'authentification
@@ -13205,69 +13170,6 @@ function handleMediaListClick(e) {
     e.stopPropagation();
     return;
   }
-}
-
-/**
- * ADDED: Récupère la liste des dossiers vides
- */
-function getMediaFolders() {
-  const raw = localStorage.getItem(window.LMD.storageKeys.mediaFolders);
-  if (!raw) {
-    return [];
-  }
-  try {
-    const stored = JSON.parse(raw);
-    if (Array.isArray(stored)) {
-      return stored;
-    }
-  } catch (e) {
-    // Fallback silencieux (zéro console error)
-  }
-  return [];
-}
-
-/**
- * ADDED: Sauvegarde la liste des dossiers vides
- */
-function saveMediaFolders(folders) {
-  try {
-    localStorage.setItem(
-      window.LMD.storageKeys.mediaFolders,
-      JSON.stringify(folders),
-    );
-  } catch (e) {
-    // Fallback silencieux (zéro console error)
-  }
-}
-
-/**
- * ADDED: Récupère tous les dossiers (union des dossiers vides + dossiers des médias + "Non classé")
- */
-function getAllMediaFolders() {
-  const folders = new Set();
-
-  // Ajouter "Non classé" (toujours présent)
-  folders.add("Non classé");
-
-  // Ajouter les dossiers vides
-  const emptyFolders = getMediaFolders();
-  emptyFolders.forEach((f) => folders.add(f));
-
-  // Ajouter les dossiers des médias
-  const mediaList = getMediaData();
-  mediaList.forEach((media) => {
-    const folder = toText(media.folder) || "Non classé";
-    folders.add(folder);
-  });
-
-  // Trier (sauf "Non classé" qui reste en premier)
-  const sorted = Array.from(folders).sort((a, b) => {
-    if (a === "Non classé") return -1;
-    if (b === "Non classé") return 1;
-    return a.localeCompare(b);
-  });
-
-  return sorted;
 }
 
 /**

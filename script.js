@@ -20005,70 +20005,86 @@ if (document.body && !document.body.dataset.page) {
     }
 }
 
-// ADDED: Protection de la page admin.html
-if (window.location.pathname.includes('admin.html')) {
-    // PATCH: Vérifier que Firebase est disponible
+/**
+ * ADDED: Initialisation centralisée de l'authentification Firebase
+ * Gère la protection admin.html, les boutons header et le logout
+ */
+function initAuthRoutingAndUI() {
     const fb = window.fb;
     if (!fb || typeof fb.onAuthStateChanged !== "function") {
-        // Firebase pas dispo => rediriger vers login sans paramètre next
-        window.location.href = 'login.html';
+        console.warn("[AUTH] Firebase indisponible");
         return;
     }
 
-    // Écouter les changements d'état d'authentification Firebase
+    const isAdminPage = location.pathname.includes("admin.html");
+
     fb.onAuthStateChanged(fb.auth, (user) => {
-        if (!user) {
-            // Utilisateur non connecté - rediriger vers login avec next=admin
-            window.location.href = 'login.html?next=admin.html';
-        } else {
+        if (isAdminPage && !user) {
+            location.href = "login.html?redirect=admin.html";
+            return;
+        }
+
+        // Mise à jour des boutons header
+        updateAuthButtons();
+
+        if (user) {
             // Utilisateur connecté - stocker l'email pour affichage futur
             window.currentUserEmail = user.email;
 
-            // Chercher un bouton de logout existant ou en créer un
-            let logoutBtn = document.getElementById('logoutBtn') ||
-                          document.querySelector('[data-action="logout"]');
+            // Chercher un bouton de logout existant ou en créer un sur admin
+            if (isAdminPage) {
+                let logoutBtn = document.getElementById('logoutBtn') ||
+                              document.querySelector('[data-action="logout"]');
 
-            if (!logoutBtn) {
-                // Créer un bouton de logout minimal en haut de la page
-                const header = document.querySelector('header') || document.body;
-                const logoutContainer = document.createElement('div');
-                logoutContainer.style.cssText = `
-                    position: fixed;
-                    top: 10px;
-                    right: 10px;
-                    z-index: 1000;
-                    background: rgba(0,0,0,0.8);
-                    padding: 8px 12px;
-                    border-radius: 4px;
-                    font-size: 0.875em;
-                `;
-                logoutContainer.innerHTML = `
-                    <span style="color: white; margin-right: 8px;">${escapeHtml(user.email)}</span>
-                    <button id="admin-logout-btn" style="
-                        background: #dc3545;
-                        color: white;
-                        border: none;
-                        padding: 4px 8px;
-                        border-radius: 3px;
-                        cursor: pointer;
-                        font-size: 0.8em;
-                    ">Déconnexion</button>
-                `;
-                header.appendChild(logoutContainer);
-                logoutBtn = document.getElementById('admin-logout-btn');
-            }
+                if (!logoutBtn) {
+                    // Créer un bouton de logout minimal en haut de la page
+                    const header = document.querySelector('header') || document.body;
+                    const logoutContainer = document.createElement('div');
+                    logoutContainer.style.cssText = `
+                        position: fixed;
+                        top: 10px;
+                        right: 10px;
+                        z-index: 1000;
+                        background: rgba(0,0,0,0.8);
+                        padding: 8px 12px;
+                        border-radius: 4px;
+                        font-size: 0.875em;
+                    `;
+                    logoutContainer.innerHTML = `
+                        <span style="color: white; margin-right: 8px;">${escapeHtml(user.email)}</span>
+                        <button id="admin-logout-btn" style="
+                            background: #dc3545;
+                            color: white;
+                            border: none;
+                            padding: 4px 8px;
+                            border-radius: 3px;
+                            cursor: pointer;
+                            font-size: 0.8em;
+                        ">Déconnexion</button>
+                    `;
+                    header.appendChild(logoutContainer);
+                    logoutBtn = document.getElementById('admin-logout-btn');
+                }
 
-            // Brancher l'événement de logout
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', function() {
-                    fb.signOut(fb.auth).then(() => {
-                        window.location.href = 'index.html';
-                    }).catch((error) => {
-                        console.error('Erreur lors de la déconnexion:', error);
-                        window.location.reload();
+                // Brancher l'événement de logout
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', function() {
+                        fb.signOut(fb.auth).then(() => {
+                            window.location.href = 'index.html';
+                        }).catch((error) => {
+                            console.error('Erreur lors de la déconnexion:', error);
+                            window.location.reload();
+                        });
                     });
-                });
+                }
             }
         }
     });
+}
+
+// ADDED: Appel safe de l'initialisation auth
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initAuthRoutingAndUI);
+} else {
+    initAuthRoutingAndUI();
 }

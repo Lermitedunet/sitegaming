@@ -21912,10 +21912,21 @@ function handleLoginSubmit(e) {
   submitBtn.disabled = true;
   submitBtn.textContent = "Connexion en cours...";
 
-  // Utiliser Firebase pour la connexion
-  window.fb
-    .signInWithEmailAndPassword(window.fb.auth, identifier, password)
+  // Configurer la persistance selon la checkbox "Se souvenir de moi"
+  const rememberMe = document.getElementById('login-remember')?.checked;
+  const persistence = rememberMe ? window.fb.browserLocalPersistence : window.fb.browserSessionPersistence;
+
+  console.log(`[AUTH DEBUG] Login attempt - persistence: ${rememberMe ? 'local' : 'session'}, page: ${location.pathname}`);
+
+  // Appliquer la persistance et faire la connexion
+  window.fb.setPersistence(window.fb.auth, persistence)
+    .then(() => {
+      console.log(`[AUTH DEBUG] Persistence set to ${rememberMe ? 'local' : 'session'}`);
+      // Maintenant faire la connexion
+      return window.fb.signInWithEmailAndPassword(window.fb.auth, identifier, password);
+    })
     .then((userCredential) => {
+      console.log(`[AUTH DEBUG] Login successful - user: ${userCredential.user.email}, page: ${location.pathname}`);
       // Connexion réussie
       const nextUrl = getNextUrl();
       window.location.href = nextUrl;
@@ -22229,8 +22240,21 @@ function initAuthRoutingAndUI() {
   }
 
   const isAdminPage = location.pathname.includes("admin.html");
+  const isLoginPage = location.pathname.includes("login.html");
 
   fb.onAuthStateChanged(fb.auth, (user) => {
+    console.log(`[AUTH DEBUG] onAuthStateChanged fired - user: ${user?.email || 'null'}, page: ${location.pathname}, isAdminPage: ${isAdminPage}, isLoginPage: ${isLoginPage}`);
+
+    // Si on est sur login.html et que l'utilisateur est déjà connecté, rediriger
+    if (isLoginPage && user) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirect = urlParams.get('redirect');
+      const nextUrl = redirect ? `${redirect}` : 'index.html';
+      console.log(`[AUTH DEBUG] User already logged in on login page, redirecting to: ${nextUrl}`);
+      window.location.href = nextUrl;
+      return;
+    }
+
     if (isAdminPage && !user) {
       location.href = "login.html?redirect=admin.html";
       return;

@@ -4,7 +4,7 @@ import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, creat
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCN-rP6F_nwVtC3r0D7KstwKKn80diJf4Q",
+  apiKey: "AIzaSyCN-rP6F_nvVtC3r0D7KstwKKn80diJf4Q",
   authDomain: "sitegaming-firebase.firebaseapp.com",
   projectId: "sitegaming-firebase",
   storageBucket: "sitegaming-firebase.firebasestorage.app",

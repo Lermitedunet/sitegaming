@@ -99,8 +99,8 @@ document.addEventListener("DOMContentLoaded", () => {
  * @returns {Array|Object} - Données équipe (array ou object)
  */
 function getBaseTeamSafe() {
-  if (typeof BASE_TEAM !== "undefined" && Array.isArray(BASE_TEAM))
-    return BASE_TEAM;
+  if (typeof window.BASE_TEAM !== "undefined" && Array.isArray(window.BASE_TEAM))
+    return window.BASE_TEAM;
   if (Array.isArray(window.TEAM)) return window.TEAM;
   if (Array.isArray(window.AUTHORS)) return window.AUTHORS;
   return [];
@@ -690,7 +690,7 @@ function getGamesSource() {
       console.warn("Erreur lors de la lecture depuis localStorage:", e);
     }
   }
-  return window.BASE_GAMES;
+  return window.BASE_GAMES || [];
 }
 
 /**
@@ -7488,7 +7488,7 @@ function normalizeGame(game) {
  */
 function getGamesData() {
   const override = getGamesOverride();
-  const games = override || window.BASE_GAMES;
+  const games = override || window.BASE_GAMES || [];
 
   // ADDED: Normaliser tous les jeux pour migration souple et cohérence
   if (Array.isArray(games)) {
@@ -7612,7 +7612,7 @@ function saveArticlesOverride(nextArticles) {
  */
 function getArticlesData() {
   const override = getArticlesOverride();
-  const articles = override || window.BASE_ARTICLES;
+  const articles = override || window.BASE_ARTICLES || [];
 
   // ADDED: Créer une copie pour éviter de muter les données originales
   // IMPORTANT: Ne PAS générer de slugs ici (uniquement au SAVE admin)

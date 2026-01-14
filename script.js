@@ -995,6 +995,11 @@ function applySortAndFilters() {
         return;
     }
     
+    // PATCH: Sécuriser les variables globales
+    const safeSelectedConsoles = Array.isArray(selectedConsoles) ? selectedConsoles : [];
+    const safeSelectedGenres = Array.isArray(selectedGenres) ? selectedGenres : [];
+    const safeSearchText = (typeof searchText === "string") ? searchText : "";
+
     // PATCH: Sécuriser getGamesData() contre undefined
     const gamesData = getGamesData();
     const safeGamesData = Array.isArray(gamesData) ? gamesData : [];

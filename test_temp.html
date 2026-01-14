@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Temp</title>
+    <script src="script_test.js"></script>
+</head>
+<body>
+    <h1>Test Temp</h1>
+    <div id="result"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const result = document.getElementById('result');
+            try {
+                result.innerHTML = '<p>✅ Test terminé - voir console</p>';
+            } catch (e) {
+                result.innerHTML = '<p>❌ Erreur: ' + e.message + '</p>';
+            }
+        });
+    </script>
+</body>
+</html>

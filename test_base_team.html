@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test BASE_TEAM</title>
+    <script type="module" src="script.js"></script>
+</head>
+<body>
+    <h1>Test BASE_TEAM</h1>
+    <div id="result"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const result = document.getElementById('result');
+            try {
+                if (typeof getBaseTeamSafe === 'function') {
+                    const data = getBaseTeamSafe();
+                    result.innerHTML = '<p>✅ getBaseTeamSafe existe et retourne: ' + JSON.stringify(data) + '</p>';
+                } else {
+                    result.innerHTML = '<p>❌ getBaseTeamSafe n\'existe pas</p>';
+                }
+
+                // Test de BASE_TEAM direct
+                try {
+                    const baseTeam = BASE_TEAM;
+                    result.innerHTML += '<p>✅ BASE_TEAM existe: ' + JSON.stringify(baseTeam) + '</p>';
+                } catch (e) {
+                    result.innerHTML += '<p>ℹ️ BASE_TEAM n\'existe pas (normal)</p>';
+                }
+            } catch (e) {
+                result.innerHTML = '<p>❌ Erreur: ' + e.message + '</p>';
+            }
+        });
+    </script>
+</body>
+</html>

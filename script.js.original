@@ -92,7 +92,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Toutes les clés et données de base sont gérées via window.* et window.LMD
-// FORCE RELOAD: 2026-01-14 12:45
 
 /**
  * ADDED: Helper safe pour récupérer les données équipe avec fallbacks

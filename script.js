@@ -1781,6 +1781,97 @@ function exportDebugReport() {
 }
 
 /**
+ * ADDED: Exporte toutes les données admin (localStorage)
+ */
+function exportAdminData() {
+  const data = {};
+
+  // Liste des clés localStorage utilisées par l'admin
+  const adminKeys = [
+    window.LMD?.storageKeys?.games || 'games',
+    window.LMD?.storageKeys?.articles || 'articles',
+    window.LMD?.storageKeys?.tests || 'tests',
+    window.LMD?.storageKeys?.bonsPlans || 'bonsPlans',
+    window.LMD?.storageKeys?.promos || 'promos',
+    window.LMD?.storageKeys?.sponsors || 'sponsors',
+    window.LMD?.storageKeys?.media || 'media',
+    window.LMD?.storageKeys?.team || 'team',
+    window.LMD?.storageKeys?.mediaFolders || 'mediaFolders'
+  ];
+
+  // Collecter toutes les données
+  adminKeys.forEach(key => {
+    try {
+      const value = localStorage.getItem(key);
+      if (value) {
+        data[key] = JSON.parse(value);
+      }
+    } catch (e) {
+      console.warn(`Erreur lors de la lecture de ${key}:`, e);
+    }
+  });
+
+  // Ajouter métadonnées
+  data._export = {
+    timestamp: new Date().toISOString(),
+    version: '1.0',
+    source: 'admin-export'
+  };
+
+  // Créer et télécharger le fichier
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `admin-data-${new Date().toISOString().substring(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  debugLog("ADMIN", "Données exportées avec succès");
+}
+
+/**
+ * ADDED: Importe des données admin depuis un fichier JSON
+ */
+function importAdminData(jsonData) {
+  try {
+    const data = JSON.parse(jsonData);
+
+    // Vérifier que c'est un export valide
+    if (!data._export || data._export.source !== 'admin-export') {
+      throw new Error('Fichier non valide - doit être un export admin');
+    }
+
+    let importedCount = 0;
+
+    // Importer chaque clé (sauf les métadonnées)
+    Object.keys(data).forEach(key => {
+      if (key !== '_export') {
+        try {
+          localStorage.setItem(key, JSON.stringify(data[key]));
+          importedCount++;
+          debugLog("ADMIN", `Importé: ${key}`);
+        } catch (e) {
+          console.error(`Erreur lors de l'import de ${key}:`, e);
+        }
+      }
+    });
+
+    // Recharger la page pour appliquer les changements
+    alert(`Import terminé ! ${importedCount} collections importées. La page va se recharger.`);
+    window.location.reload();
+
+  } catch (e) {
+    alert(`Erreur lors de l'import: ${e.message}`);
+    console.error('Import error:', e);
+  }
+}
+
+/**
  * Capture globale des erreurs
  */
 function setupErrorCapturing() {
@@ -7699,7 +7790,7 @@ function saveTestsOverride(nextTests) {
  */
 function getTestsData() {
   const override = getTestsOverride();
-  const tests = override || BASE_TESTS;
+  const tests = override || window.BASE_TESTS || [];
 
   // Créer une copie pour éviter de muter les données originales
   const hydratedTests = Array.isArray(tests) ? [...tests] : [];
@@ -8596,7 +8687,7 @@ function renderBonsPlansPage() {
  */
 function getBonsPlansData() {
   const override = getBonsPlansOverride();
-  const bonsPlans = override || BASE_BONS_PLANS;
+  const bonsPlans = override || window.BASE_BONS_PLANS || [];
 
   // Créer une copie pour éviter de muter les données originales
   const hydratedBonsPlans = Array.isArray(bonsPlans) ? [...bonsPlans] : [];
@@ -10509,6 +10600,40 @@ function initAdminPage() {
           alert("Contenu démo supprimé !");
         }, 500);
       }
+    });
+  }
+
+  // ADDED: Boutons export/import données
+  const btnExportData = document.getElementById("btn-export-data");
+  const btnImportData = document.getElementById("btn-import-data");
+  const importFileInput = document.getElementById("import-file");
+
+  if (btnExportData) {
+    btnExportData.addEventListener("click", () => {
+      if (confirm("Exporter toutes vos données admin dans un fichier JSON ?\n\nCe fichier contiendra tous les jeux, articles, tests, etc. que vous avez créés.")) {
+        exportAdminData();
+      }
+    });
+  }
+
+  if (btnImportData && importFileInput) {
+    btnImportData.addEventListener("click", () => {
+      importFileInput.click();
+    });
+
+    importFileInput.addEventListener("change", (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (!confirm(`Importer les données depuis "${file.name}" ?\n\n⚠️ Attention: Cela remplacera vos données actuelles !`)) {
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        importAdminData(e.target.result);
+      };
+      reader.readAsText(file);
     });
   }
 
@@ -21963,7 +22088,11 @@ function updateAuthButtons() {
   fb.onAuthStateChanged(fb.auth, (user) => {
     if (user) {
       // Utilisateur connecté
+      const isAdmin = ADMIN_EMAILS.includes(user.email);
+      const adminButton = isAdmin ? `<a href="admin.html" class="btn btn-outline" style="font-size: 0.875em; margin-right: var(--spacing-sm);">Admin</a>` : '';
+
       authButtonsContainer.innerHTML = `
+                ${adminButton}
                 <span style="color: var(--color-text-secondary); font-size: 0.875em; margin-right: var(--spacing-sm);">${escapeHtml(user.email)}</span>
                 <button type="button" class="btn btn-secondary" id="btn-logout" style="font-size: 0.875em;">Se déconnecter</button>
             `;

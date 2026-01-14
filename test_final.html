@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Final</title>
+    <script type="module" src="script.js"></script>
+</head>
+<body>
+    <h1>Test Final</h1>
+    <p>Si cette page se charge sans erreur console, c'est gagné !</p>
+    <div id="status">Chargement...</div>
+
+    <script>
+        setTimeout(() => {
+            document.getElementById('status').textContent = '✅ Page chargée avec succès !';
+        }, 1000);
+    </script>
+</body>
+</html>

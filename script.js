@@ -19717,7 +19717,7 @@ function isValidEmail(email) {
  */
 function getNextUrl() {
     const urlParams = new URLSearchParams(window.location.search);
-    const next = urlParams.get('next');
+    const next = urlParams.get('next') || urlParams.get('redirect'); // PATCH: Supporter aussi 'redirect'
 
     // Whitelist des pages autorisées
     const allowedPages = ['admin.html'];
@@ -20007,8 +20007,16 @@ if (document.body && !document.body.dataset.page) {
 
 // ADDED: Protection de la page admin.html
 if (window.location.pathname.includes('admin.html')) {
+    // PATCH: Vérifier que Firebase est disponible
+    const fb = window.fb;
+    if (!fb || typeof fb.onAuthStateChanged !== "function") {
+        // Firebase pas dispo => rediriger vers login sans paramètre next
+        window.location.href = 'login.html';
+        return;
+    }
+
     // Écouter les changements d'état d'authentification Firebase
-    window.fb.onAuthStateChanged(window.fb.auth, (user) => {
+    fb.onAuthStateChanged(fb.auth, (user) => {
         if (!user) {
             // Utilisateur non connecté - rediriger vers login avec next=admin
             window.location.href = 'login.html?next=admin.html';
@@ -20053,7 +20061,7 @@ if (window.location.pathname.includes('admin.html')) {
             // Brancher l'événement de logout
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', function() {
-                    window.fb.signOut(window.fb.auth).then(() => {
+                    fb.signOut(fb.auth).then(() => {
                         window.location.href = 'index.html';
                     }).catch((error) => {
                         console.error('Erreur lors de la déconnexion:', error);

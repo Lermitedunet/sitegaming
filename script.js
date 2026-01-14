@@ -20005,6 +20005,13 @@ if (document.body && !document.body.dataset.page) {
     }
 }
 
+// ADDED: Liste des emails autorisés pour admin.html
+const ADMIN_EMAILS = [
+  "lermitedunet@gmail.com",
+  "pingon.yanis58@gmail.com",
+  "samtou.atake@gmail.com"
+];
+
 /**
  * ADDED: Initialisation centralisée de l'authentification Firebase
  * Gère la protection admin.html, les boutons header et le logout
@@ -20021,6 +20028,13 @@ function initAuthRoutingAndUI() {
     fb.onAuthStateChanged(fb.auth, (user) => {
         if (isAdminPage && !user) {
             location.href = "login.html?redirect=admin.html";
+            return;
+        }
+
+        // Vérification de la whitelist admin
+        if (isAdminPage && user && !ADMIN_EMAILS.includes(user.email)) {
+            console.warn("[AUTH] Accès admin refusé pour", user.email);
+            location.href = "index.html";
             return;
         }
 

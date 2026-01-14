@@ -753,6 +753,11 @@ function filterGames(games = null) {
         return [];
     }
 
+    // PATCH: Sécuriser les variables globales utilisées dans le filtrage
+    const safeSelectedConsoles = Array.isArray(selectedConsoles) ? selectedConsoles : [];
+    const safeSelectedGenres = Array.isArray(selectedGenres) ? selectedGenres : [];
+    const safeSearchText = (typeof searchText === "string") ? searchText : "";
+
     return games.filter(game => {
         // PATCH: Normaliser les propriétés du jeu pour éviter les erreurs "undefined"
         const safePlatforms = Array.isArray(game.platforms) ? game.platforms : [];
@@ -762,32 +767,32 @@ function filterGames(games = null) {
         // Vérifier les consoles
         // Si aucune console sélectionnée, on accepte tous les jeux
         let consoleMatch = true;
-        if (selectedConsoles.length > 0) {
+        if (safeSelectedConsoles.length > 0) {
             // Convertir les plateformes du jeu en minuscules pour comparaison
             const gamePlatforms = safePlatforms.map(p => p.toLowerCase());
             // Le jeu doit avoir AU MOINS une plateforme dans selectedConsoles
             consoleMatch = gamePlatforms.some(platform =>
-                selectedConsoles.includes(platform.toLowerCase())
+                safeSelectedConsoles.includes(platform.toLowerCase())
             );
         }
 
         // Vérifier les genres
         // Si aucun genre sélectionné, on accepte tous les jeux
         let genreMatch = true;
-        if (selectedGenres.length > 0) {
+        if (safeSelectedGenres.length > 0) {
             // Convertir les genres du jeu en minuscules pour comparaison
             const gameGenres = safeGenres.map(g => g.toLowerCase());
             // Le jeu doit avoir AU MOINS un genre dans selectedGenres
             genreMatch = gameGenres.some(genre =>
-                selectedGenres.includes(genre.toLowerCase())
+                safeSelectedGenres.includes(genre.toLowerCase())
             );
         }
 
         // Vérifier la recherche par nom
         let searchMatch = true;
-        if (searchText.trim() !== '') {
+        if (safeSearchText.trim() !== '') {
             const gameTitle = safeTitle.toLowerCase();
-            searchMatch = gameTitle.includes(searchText.toLowerCase());
+            searchMatch = gameTitle.includes(safeSearchText.toLowerCase());
         }
         
         // Le jeu est affiché si tous les critères sont remplis
@@ -810,8 +815,12 @@ function applyFilters() {
     const safeSelectedGenres = Array.isArray(selectedGenres) ? selectedGenres : [];
     const safeSearchText = (typeof searchText === "string") ? searchText : "";
 
+    // PATCH: Sécuriser getGamesData() contre undefined
+    const gamesData = getGamesData();
+    const safeGamesData = Array.isArray(gamesData) ? gamesData : [];
+
     // ADDED: Filtrer les jeux depuis getGamesData() (pas d'accès direct à loadedGames)
-    const filteredGames = filterGames(getGamesData());
+    const filteredGames = filterGames(safeGamesData);
 
     // Réafficher la grille avec les jeux filtrés (avec pagination)
     if (gamesGrid) {
@@ -824,7 +833,7 @@ function applyFilters() {
     // Mettre à jour le compteur de résultats
     const resultsCount = document.getElementById('results-count');
     if (resultsCount) {
-        const totalGames = getGamesData().length;
+        const totalGames = safeGamesData.length;
         if (filteredGames.length === totalGames && safeSelectedConsoles.length === 0 && safeSelectedGenres.length === 0 && safeSearchText === '') {
             resultsCount.textContent = ''; // Masquer si aucun filtre n'est appliqué
         } else {
@@ -1039,7 +1048,7 @@ function applySortAndFilters() {
     // Mettre à jour le compteur de résultats
     const resultsCount = document.getElementById('results-count');
     if (resultsCount) {
-        const totalGames = getGamesData().length;
+        const totalGames = safeGamesData.length;
         if (filteredGames.length === totalGames && safeSelectedConsoles.length === 0 && safeSelectedGenres.length === 0 && safeSearchText === '') {
             resultsCount.textContent = ''; // Masquer si aucun filtre n'est appliqué
         } else {

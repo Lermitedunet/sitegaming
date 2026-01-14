@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Découvrez l'équipe de LE MONT DE LERMITE - Les créateurs de contenu et rédacteurs du site">
+    <title>Équipe - LE MONT DE LERMITE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <input type="checkbox" id="nav-toggle" class="nav-toggle">
+        <div class="header-top">
+            <div class="header-content">
+                <h1><a href="index.html" style="text-decoration: none; color: inherit;">LE MONT DE LERMITE</a></h1>
+            </div>
+            <div class="header-buttons">
+                <a href="login.html" class="btn btn-secondary">Se connecter</a>
+                <a href="signup.html" class="btn btn-primary">S'inscrire</a>
+            </div>
+            <label for="nav-toggle" class="nav-burger" aria-label="Ouvrir le menu">
+                <span></span><span></span><span></span>
+            </label>
+        </div>
+        <nav class="main-nav">
+            <a href="actu.html" class="nav-link">Actu</a>
+            <a href="jeux.html" class="nav-link">Jeux</a>
+            <a href="tests.html" class="nav-link">Tests</a>
+            <a href="guides.html" class="nav-link">Guides</a>
+            <a href="bons-plans.html" class="nav-link">Bons plans</a>
+            <a href="equipe.html" class="nav-link">Équipe</a>
+        </nav>
+        
+        <div class="mobile-menu">
+            <a href="actu.html">Actu</a>
+            <a href="jeux.html">Jeux</a>
+            <a href="tests.html">Tests</a>
+            <a href="guides.html">Guides</a>
+            <a href="bons-plans.html">Bons plans</a>
+            <a href="equipe.html">Équipe</a>
+            <div class="mobile-menu__sep"></div>
+            <a href="login.html">Se connecter</a>
+            <a href="signup.html" class="mobile-menu__cta">S'inscrire</a>
+        </div>
+    </header>
+    
+    <div class="container equipe-page">
+        <div class="page-layout">
+            <aside class="page-sidebar-left">
+            </aside>
+
+            <main class="page-main">
+                <!-- Hero card -->
+                <section class="hero-card" style="text-align: center; margin-bottom: var(--spacing-3xl); padding: var(--spacing-2xl); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+                    <h1 style="font-size: 3em; font-family: var(--font-heading); color: var(--color-text-primary); margin-bottom: var(--spacing-md);">Équipe</h1>
+                    <p style="font-size: 1.25em; color: var(--color-text-secondary);">Les admins et rédacteurs du site</p>
+                </section>
+
+                <!-- Bouton Retour - déplacé juste après le hero -->
+                <button class="btn-back" onclick="history.back()" style="margin-bottom: var(--spacing-xl);">← Retour</button>
+
+                <!-- Grid des membres -->
+                <div id="teamGrid" class="team-grid" style="display: flex; flex-direction: column; gap: var(--spacing-xl);">
+                    <!-- Chargé dynamiquement depuis getTeamData() -->
+                </div>
+            </main>
+
+            <!-- Espace Pub - colonne droite -->
+            <aside class="page-sidebar-right ad-space">
+                <div class="ad-block">
+                    <h3>Promos du moment</h3>
+                    <div class="promos-grid" id="promosSlot"></div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Bloc Partenariat - après le container pour éviter chevauchement -->
+    <section id="partnershipBlock" class="partnership-block" aria-label="Partenariats"></section>
+
+    <footer style="margin-top: var(--spacing-3xl); padding: var(--spacing-xl); text-align: center; color: var(--color-text-secondary); border-top: 1px solid var(--color-border);">
+        <p>&copy; 2026 LE MONT DE LERMITE. Tous droits réservés.</p>
+    </footer>
+    
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // ADDED: Initialiser la page équipe
+        if (typeof renderTeamPage === 'function') {
+            renderTeamPage();
+        } else {
+            console.error('renderTeamPage() non disponible');
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Profil auteur - LE MONT DE LERMITE">
+    <title>Auteur - LE MONT DE LERMITE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <input type="checkbox" id="nav-toggle" class="nav-toggle">
+        <div class="header-top">
+            <div class="header-content">
+                <h1><a href="index.html" style="text-decoration: none; color: inherit;">LE MONT DE LERMITE</a></h1>
+            </div>
+            <div class="header-buttons">
+                <a href="#" class="btn btn-secondary">Se connecter</a>
+                <a href="#" class="btn btn-primary">S'inscrire</a>
+            </div>
+            <label for="nav-toggle" class="nav-burger" aria-label="Ouvrir le menu">
+                <span></span><span></span><span></span>
+            </label>
+        </div>
+        <nav class="main-nav">
+            <a href="actu.html" class="nav-link">Actu</a>
+            <a href="jeux.html" class="nav-link">Jeux</a>
+            <a href="jeux.html?view=favorites" class="nav-link">Favoris <span class="fav-badge" id="fav-badge">0</span></a>
+            <a href="tests.html" class="nav-link">Tests</a>
+            <a href="guides.html" class="nav-link">Guides</a>
+            <a href="bons-plans.html" class="nav-link">Bons plans</a>
+            <a href="equipe.html" class="nav-link">Équipe</a>
+        </nav>
+        
+        <div class="mobile-menu">
+            <a href="actu.html">Actu</a>
+            <a href="jeux.html">Jeux</a>
+            <a href="jeux.html?view=favorites">Favoris <span class="fav-badge" id="fav-badge-mobile">0</span></a>
+            <a href="tests.html">Tests</a>
+            <a href="guides.html">Guides</a>
+            <a href="bons-plans.html">Bons plans</a>
+            <a href="equipe.html">Équipe</a>
+            <div class="mobile-menu__sep"></div>
+            <a href="#">Se connecter</a>
+            <a href="#" class="mobile-menu__cta">S'inscrire</a>
+        </div>
+    </header>
+    
+    <main class="page">
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: var(--spacing-2xl) var(--spacing-lg);">
+            <div id="auteur-page">
+                <!-- Contenu chargé dynamiquement -->
+            </div>
+        </div>
+    </main>
+    
+    <footer style="margin-top: var(--spacing-3xl); padding: var(--spacing-xl); text-align: center; color: var(--color-text-secondary); border-top: 1px solid var(--color-border);">
+        <p>&copy; 2026 LE MONT DE LERMITE. Tous droits réservés.</p>
+    </footer>
+    
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
+
+
+

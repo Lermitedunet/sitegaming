@@ -1,0 +1,44 @@
+/* Styles pour les filtres compacts sur les pages d'articles */
+.filters {
+    max-width: 900px;
+    margin: 0 auto var(--spacing-xl);
+}
+
+.filters-bar {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filters-bar input {
+    flex: 1;
+    min-width: 240px;
+}
+
+.filters-bar select {
+    width: 160px;
+}
+
+.filters-advanced {
+    margin-top: var(--spacing-md);
+    display: none;
+}
+
+.filters-advanced.is-open {
+    display: block;
+}
+
+.filters-advanced .chip-group {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+/* Réduction du padding sur les pages d'articles pour un rendu plus compact */
+body[data-page="tests"] .filters,
+body[data-page="guides"] .filters,
+body[data-page="actu"] .filters,
+body[data-page="bons-plans"] .filters {
+    padding: var(--spacing-lg);
+}

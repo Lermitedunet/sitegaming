@@ -1,0 +1,65 @@
+/* STICKY FOOTER LAYOUT - DÉPLACÉ DANS style.css (plus global) */
+
+/* Styles pour la mise en page avec colonne droite */
+.container {
+    display: flex;
+    gap: var(--spacing-xl);
+    align-items: flex-start;
+}
+
+/* Force layout pour main dans container (priorité plus haute) */
+.container > main {
+    flex: 1;
+    min-width: 0; /* Permet au contenu de rétrécir */
+}
+
+.container > aside {
+    flex: 0 0 300px;
+    min-width: 280px;
+}
+
+/* Styles pour les blocs publicitaires */
+.ad-space {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.ad-block {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+}
+
+.ad-block h3 {
+    margin: 0 0 var(--spacing-md) 0;
+    font-size: 1.125em;
+    color: var(--color-text-primary);
+}
+
+.ad-placeholder {
+    text-align: center;
+    color: var(--color-text-secondary);
+    padding: var(--spacing-lg);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-sm);
+}
+
+.ad-placeholder p {
+    margin: 0;
+    font-size: 0.875em;
+}
+
+/* Responsive : colonne droite passe en dessous sur mobile */
+@media (max-width: 1024px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .container > aside {
+        flex: none;
+        width: 100%;
+        min-width: auto;
+    }
+}

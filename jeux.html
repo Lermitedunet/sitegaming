@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeux - LE MONT DE LERMITE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <input type="checkbox" id="nav-toggle" class="nav-toggle">
+        <div class="header-top">
+            <div class="header-content">
+                <h1><a href="index.html" style="text-decoration: none; color: inherit;">LE MONT DE LERMITE</a></h1>
+            </div>
+            <div class="header-buttons">
+                <a href="login.html" class="btn btn-secondary">Se connecter</a>
+                <a href="signup.html" class="btn btn-primary">S'inscrire</a>
+            </div>
+            <label for="nav-toggle" class="nav-burger" aria-label="Ouvrir le menu">
+                <span></span><span></span><span></span>
+            </label>
+        </div>
+        <nav class="main-nav">
+            <a href="actu.html" class="nav-link">Actu</a>
+            <a href="jeux.html" class="nav-link active">Jeux</a>
+            <a href="tests.html" class="nav-link">Tests</a>
+            <a href="guides.html" class="nav-link">Guides</a>
+            <a href="bons-plans.html" class="nav-link">Bons plans</a>
+            <a href="equipe.html" class="nav-link">Équipe</a>
+        </nav>
+        
+        <div class="mobile-menu">
+            <a href="actu.html">Actu</a>
+            <a href="jeux.html">Jeux</a>
+            <a href="tests.html">Tests</a>
+            <a href="guides.html">Guides</a>
+            <a href="bons-plans.html">Bons plans</a>
+            <a href="equipe.html">Équipe</a>
+            <div class="mobile-menu__sep"></div>
+            <a href="login.html">Se connecter</a>
+            <a href="signup.html" class="mobile-menu__cta">S'inscrire</a>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="page-layout">
+            <aside class="page-sidebar-left">
+                <button class="btn-back" onclick="history.back()">← Retour</button>
+
+                <aside id="latestArticlesSlot"></aside>
+            </aside>
+
+            <main class="page-main">
+                <section class="page-hero">
+                    <h1 id="games-title">JEUX</h1>
+                    <p id="games-subtitle">Découvrez notre sélection de jeux</p>
+                </section>
+            
+                <!-- Barre de filtres -->
+                <div class="filters-bar">
+                    <div class="filter-group">
+                        <label>Console :</label>
+                        <div class="chips-container">
+                            <button class="chip" data-filter="console" data-value="ps5" type="button">PS5</button>
+                            <button class="chip" data-filter="console" data-value="xbox" type="button">Xbox</button>
+                            <button class="chip" data-filter="console" data-value="switch" type="button">Switch</button>
+                            <button class="chip" data-filter="console" data-value="pc" type="button">PC</button>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Genre :</label>
+                        <div class="chips-container">
+                            <button class="chip" data-filter="genre" data-value="rpg" type="button">RPG</button>
+                            <button class="chip" data-filter="genre" data-value="action" type="button">Action</button>
+                            <button class="chip" data-filter="genre" data-value="fps" type="button">FPS</button>
+                            <button class="chip" data-filter="genre" data-value="aventure" type="button">Aventure</button>
+                            <button class="chip" data-filter="genre" data-value="survival" type="button">Survival</button>
+                            <button class="chip" data-filter="genre" data-value="inde" type="button">Indé</button>
+                        </div>
+                    </div>
+
+                    <div class="search-group">
+                        <input type="text" class="search-input" id="search-input" placeholder="Rechercher un jeu...">
+                    </div>
+
+                    <div class="filter-group">
+                        <button class="chip chip-reset" id="reset-filters" type="button">Réinitialiser</button>
+                    </div>
+
+                    <div class="results-count" id="results-count"></div>
+                </div>
+
+                <!-- Barre de tri -->
+                <div class="sort-bar">
+                    <label for="sort-select">Trier par</label>
+                    <select id="sort-select">
+                        <option value="default">Par défaut</option>
+                        <option value="az">A–Z</option>
+                        <option value="za">Z–A</option>
+                        <option value="favorites">Favoris</option>
+                        <option value="recent">Récemment consultés</option>
+                    </select>
+                </div>
+            
+                <!-- Grille de jeux unifiée -->
+                <div class="content-grid" id="games-grid">
+                    <!-- Contenu généré dynamiquement par initJeuxPage() -->
+                </div>
+            
+            <!-- Message si aucun favori -->
+            <div id="empty-favorites" class="empty-state">
+                <p>Aucun favori pour le moment</p>
+                <a href="index.html" class="btn btn-primary">Découvrir des jeux</a>
+            </div>
+            </main>
+
+            <!-- Espace Pub - colonne droite -->
+            <aside class="page-sidebar-right ad-space">
+                <div class="ad-block">
+                    <h3>Promos du moment</h3>
+                    <div class="promos-grid" id="promosSlot"></div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Bloc Partenariat - après le container pour éviter chevauchement -->
+    <section id="partnershipBlock" class="partnership-block" aria-label="Partenariats"></section>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
+

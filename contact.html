@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact – LE MONT DE LERMITE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-contact">
+    <header>
+        <input type="checkbox" id="nav-toggle" class="nav-toggle">
+        <div class="header-top">
+            <div class="header-content">
+                <h1><a href="index.html" style="text-decoration: none; color: inherit;">LE MONT DE LERMITE</a></h1>
+            </div>
+            <div class="header-buttons" id="headerAuthButtons">
+                <a href="login.html" class="btn btn-secondary">Se connecter</a>
+                <a href="signup.html" class="btn btn-primary">S'inscrire</a>
+            </div>
+            <label for="nav-toggle" class="nav-burger" aria-label="Ouvrir le menu">
+                <span></span><span></span><span></span>
+            </label>
+        </div>
+        <nav class="main-nav">
+            <a href="actu.html" class="nav-link">Actu</a>
+            <a href="jeux.html" class="nav-link">Jeux</a>
+            <a href="jeux.html?view=favorites" class="nav-link">Favoris <span class="fav-badge" id="fav-badge">0</span></a>
+            <a href="tests.html" class="nav-link">Tests</a>
+            <a href="guides.html" class="nav-link">Guides</a>
+            <a href="bons-plans.html" class="nav-link">Bons plans</a>
+            <a href="equipe.html" class="nav-link">Équipe</a>
+        </nav>
+
+        <div class="mobile-menu">
+            <a href="actu.html">Actu</a>
+            <a href="jeux.html">Jeux</a>
+            <a href="jeux.html?view=favorites">Favoris <span class="fav-badge" id="fav-badge-mobile">0</span></a>
+            <a href="tests.html">Tests</a>
+            <a href="guides.html">Guides</a>
+            <a href="bons-plans.html">Bons plans</a>
+            <a href="equipe.html">Équipe</a>
+            <div class="mobile-menu__sep"></div>
+            <a href="login.html">Se connecter</a>
+            <a href="signup.html" class="mobile-menu__cta">S'inscrire</a>
+        </div>
+    </header>
+
+    <main class="page">
+        <div class="page-container">
+            <div class="page-header">
+                <h1>Contact</h1>
+                <p>Une question, un bug ou une proposition ? Contactez-nous.</p>
+            </div>
+
+            <div class="contact-form-container">
+                <form class="contact-form" id="contactForm">
+                    <div class="form-group">
+                        <label for="contact-name">Nom / Pseudo</label>
+                        <input type="text" id="contact-name" name="name" placeholder="Votre nom ou pseudo" autocomplete="nickname">
+                        <span class="form-error" id="error-contact-name"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contact-email">Email *</label>
+                        <input type="email" id="contact-email" name="email" required placeholder="votre.email@example.com">
+                        <span class="form-error" id="error-contact-email"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contact-topic">Sujet *</label>
+                        <select id="contact-topic" name="topic" required>
+                            <option value="">Sélectionner un sujet...</option>
+                            <option value="bug">Signaler un bug</option>
+                            <option value="partenariat">Proposition de partenariat</option>
+                            <option value="autre">Autre</option>
+                        </select>
+                        <span class="form-error" id="error-contact-topic"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contact-page">Page concernée (optionnel)</label>
+                        <input type="text" id="contact-page" name="page" placeholder="ex: page d'accueil, jeux, etc.">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contact-message">Message *</label>
+                        <textarea id="contact-message" name="message" rows="6" required placeholder="Décrivez votre demande..."></textarea>
+                        <span class="form-error" id="error-contact-message"></span>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Envoyer</button>
+                    </div>
+                </form>
+
+                <div id="contact-success" class="contact-success" style="display: none;">
+                    <div class="success-icon">✓</div>
+                    <h3>Message envoyé !</h3>
+                    <p>Votre demande a été enregistrée. Nous vous répondrons dans les plus brefs délais.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

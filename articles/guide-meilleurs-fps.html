@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guide des meilleurs FPS - LE MONT DE LERMITE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <header>
+        <input type="checkbox" id="nav-toggle" class="nav-toggle">
+        <div class="header-top">
+            <div class="header-content">
+                <h1><a href="../index.html" style="text-decoration: none; color: inherit;">LE MONT DE LERMITE</a></h1>
+            </div>
+            <div class="header-buttons">
+                <a href="#" class="btn btn-secondary">Se connecter</a>
+                <a href="#" class="btn btn-primary">S'inscrire</a>
+            </div>
+            <label for="nav-toggle" class="nav-burger" aria-label="Ouvrir le menu">
+                <span></span><span></span><span></span>
+            </label>
+        </div>
+        <nav class="main-nav">
+            <a href="../actu.html" class="nav-link">Actu</a>
+            <a href="../jeux.html" class="nav-link">Jeux</a>
+            <a href="../tests.html" class="nav-link">Tests</a>
+            <a href="../guides.html" class="nav-link">Guides</a>
+            <a href="../bons-plans.html" class="nav-link">Bons plans</a>
+        </nav>
+        
+        <div class="mobile-menu">
+            <a href="../actu.html">Actu</a>
+            <a href="../jeux.html">Jeux</a>
+            <a href="../tests.html">Tests</a>
+            <a href="../guides.html">Guides</a>
+            <a href="../bons-plans.html">Bons plans</a>
+            <div class="mobile-menu__sep"></div>
+            <a href="#">Se connecter</a>
+            <a href="#" class="mobile-menu__cta">S'inscrire</a>
+        </div>
+    </header>
+    
+    <div class="container">
+        <main style="width: 100%; max-width: 900px; margin: 0 auto; padding: var(--spacing-2xl) var(--spacing-lg);">
+            <button class="btn-back" onclick="history.back()">← Retour</button>
+            
+            <article class="page-hero">
+                <div class="page-hero__image placeholder-image" style="height: 400px; border-radius: var(--radius-lg); margin-bottom: var(--spacing-xl);"></div>
+                
+                <div class="page-hero__header">
+                    <div class="meta-badges" style="display: flex; gap: var(--spacing-sm); margin-bottom: var(--spacing-md);">
+                        <span class="chip" style="background: rgba(59, 130, 246, 0.15); color: var(--color-accent); border: 1px solid rgba(59, 130, 246, 0.3);">Guide</span>
+                        <span class="chip" style="background: rgba(59, 130, 246, 0.15); color: var(--color-accent); border: 1px solid rgba(59, 130, 246, 0.3);">FPS</span>
+                    </div>
+                    <h1 class="page-title">Guide des meilleurs FPS</h1>
+                    <p style="color: var(--color-text-secondary); font-size: 1em; margin-top: var(--spacing-sm);">Top 10 des jeux de tir à essayer</p>
+                </div>
+            </article>
+            
+            <div class="content" style="margin-top: var(--spacing-2xl);">
+                <p style="margin-bottom: var(--spacing-lg); line-height: 1.8; color: var(--color-text-primary);">
+                    Les First Person Shooters (FPS) représentent l'un des genres les plus populaires du gaming. Que vous soyez un vétéran des arènes compétitives ou un nouveau venu cherchant l'adrénaline, notre sélection vous guidera vers les meilleures expériences disponibles.
+                </p>
+                
+                <p style="margin-bottom: var(--spacing-lg); line-height: 1.8; color: var(--color-text-primary);">
+                    De la précision tactique aux batailles épiques en multijoueur, chaque titre de notre top 10 offre une approche unique du genre. Nous avons testé des dizaines de jeux pour vous présenter ceux qui se démarquent par leur gameplay, leur équilibrage et leur longévité.
+                </p>
+                
+                <p style="margin-bottom: var(--spacing-lg); line-height: 1.8; color: var(--color-text-primary);">
+                    Que vous préfériez les combats rapides et intenses ou les stratégies plus réfléchies, cette sélection couvre tous les styles. Découvrez nos recommandations détaillées et trouvez le FPS qui correspond parfaitement à votre style de jeu.
+                </p>
+            </div>
+        </main>
+    </div>
+    
+    <footer>
+        <p>&copy; 2026 LE MONT DE LERMITE</p>
+    </footer>
+    
+    <script src="../data.js"></script>
+    <script src="../script.js"></script>
+</body>
+</html>
+

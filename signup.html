@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S'inscrire - LE MONT DE LERMITE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-signup">
+    <header>
+        <div class="header-top">
+            <div class="header-content">
+                <h1><a href="index.html" style="text-decoration: none; color: inherit;">LE MONT DE LERMITE</a></h1>
+            </div>
+        </div>
+    </header>
+
+    <main class="page">
+        <div class="page-container">
+            <div class="auth-container">
+                <div class="auth-card">
+                    <h2>S'inscrire</h2>
+
+                    <form class="auth-form" id="signupForm">
+                        <div class="form-group">
+                            <label for="signup-pseudo">Pseudo</label>
+                            <input type="text" id="signup-pseudo" name="pseudo" required placeholder="Votre pseudo" minlength="3">
+                            <span class="form-error" id="error-signup-pseudo"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="signup-email">Email</label>
+                            <input type="email" id="signup-email" name="email" required placeholder="votre@email.com">
+                            <span class="form-error" id="error-signup-email"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="signup-password">Mot de passe</label>
+                            <input type="password" id="signup-password" name="password" required placeholder="••••••••" minlength="6">
+                            <span class="form-error" id="error-signup-password"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="signup-password-confirm">Confirmer le mot de passe</label>
+                            <input type="password" id="signup-password-confirm" name="passwordConfirm" required placeholder="••••••••">
+                            <span class="form-error" id="error-signup-password-confirm"></span>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Créer mon compte</button>
+                        </div>
+                    </form>
+
+                    <div class="auth-footer">
+                        <p>
+                            Déjà un compte ? <a href="login.html">Se connecter</a>
+                        </p>
+                        <p>
+                            <a href="index.html">← Retour au site</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <p>&copy; 2026 LE MONT DE LERMITE</p>
+    </footer>
+    
+    <script src="data.js"></script>
+    <script type="module" src="./firebase.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

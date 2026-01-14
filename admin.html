@@ -1,0 +1,2259 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administration – Jeux - LE MONT DE LERMITE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Styles spécifiques à l'admin */
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--spacing-2xl) var(--spacing-lg);
+        }
+        
+        .admin-header {
+            margin-bottom: var(--spacing-2xl);
+            padding-bottom: var(--spacing-lg);
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .admin-header h1 {
+            font-family: var(--font-heading);
+            font-size: 2.5em;
+            color: var(--color-text-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .admin-warning {
+            background: rgba(251, 191, 36, 0.15);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-xl);
+            color: var(--color-text-primary);
+            font-size: 0.875em;
+        }
+        
+        .admin-actions {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-xl);
+            flex-wrap: wrap;
+        }
+        
+        .admin-section {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .admin-section h2 {
+            font-family: var(--font-heading);
+            font-size: 1.75em;
+            color: var(--color-text-primary);
+        }
+
+        /* Styles premium dark pour les onglets admin */
+        .admin-tabs {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-xl);
+            padding: var(--spacing-md);
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+            position: relative;
+        }
+
+        /* Scrollbar personnalisé pour le dark theme */
+        .admin-tabs::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .admin-tabs::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+        }
+
+        .admin-tabs::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+        }
+
+        .admin-tabs::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Dégradés fade pour indiquer le scroll disponible */
+        .admin-tabs::before,
+        .admin-tabs::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 20px;
+            pointer-events: none;
+            z-index: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .admin-tabs::before {
+            left: 0;
+            background: linear-gradient(to right, rgba(15, 23, 42, 0.95), transparent);
+            opacity: 0;
+        }
+
+        .admin-tabs::after {
+            right: 0;
+            background: linear-gradient(to left, rgba(15, 23, 42, 0.95), transparent);
+            opacity: 1;
+        }
+
+        .admin-tabs:hover::before {
+            opacity: 1;
+        }
+
+        .admin-tab {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-md) var(--spacing-lg);
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: var(--radius-md);
+            color: rgba(156, 163, 175, 0.9);
+            font-weight: var(--font-weight-medium);
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 180ms ease;
+            position: relative;
+            white-space: nowrap;
+            flex-shrink: 0;
+            min-width: fit-content;
+        }
+
+        .admin-tab:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+            color: rgba(209, 213, 219, 1);
+            transform: translateY(-1px);
+        }
+
+        .admin-tab:focus-visible {
+            outline: 2px solid var(--color-accent);
+            outline-offset: 2px;
+            background: rgba(59, 130, 246, 0.15);
+        }
+
+        .admin-tab.active {
+            background: rgba(59, 130, 246, 0.2);
+            color: white;
+            border-color: rgba(59, 130, 246, 0.4);
+            box-shadow: 0 2px 12px rgba(59, 130, 246, 0.4), 0 0 0 1px rgba(59, 130, 246, 0.3) inset;
+            font-weight: var(--font-weight-semibold);
+        }
+
+        .admin-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70%;
+            height: 2px;
+            background: var(--color-accent);
+            border-radius: 1px;
+        }
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .games-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+        
+        .game-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md);
+            background: rgba(31, 42, 68, 0.3);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            transition: all var(--transition-base);
+        }
+        
+        .game-item:hover {
+            background: rgba(31, 42, 68, 0.5);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        
+        .game-item-info {
+            flex: 1;
+        }
+        
+        .game-item-title {
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text-primary);
+            margin-bottom: var(--spacing-xs);
+            font-size: 1.125em;
+        }
+        
+        .game-item-meta {
+            display: flex;
+            gap: var(--spacing-md);
+            flex-wrap: wrap;
+            font-size: 0.875em;
+            color: var(--color-text-secondary);
+        }
+        
+        .game-item-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+        
+        .admin-form {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-lg);
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+        
+        .form-group label {
+            color: var(--color-text-primary);
+            font-weight: var(--font-weight-medium);
+            font-size: 0.9375em;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            background: rgba(31, 42, 68, 0.5);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            color: var(--color-text-primary);
+            font-family: inherit;
+            font-size: 0.9375em;
+            transition: all var(--transition-base);
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+        
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-xs);
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .checkbox-item label {
+            cursor: pointer;
+            font-weight: var(--font-weight-normal);
+            user-select: none;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-md);
+        }
+        
+        .btn-cancel {
+            background: transparent;
+            border: 1px solid var(--color-border);
+            color: var(--color-text-secondary);
+        }
+        
+        .btn-cancel:hover {
+            background: rgba(31, 42, 68, 0.5);
+            border-color: var(--color-text-secondary);
+            color: var(--color-text-primary);
+        }
+        
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+        
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: var(--spacing-3xl);
+            color: var(--color-text-secondary);
+        }
+        
+        
+        .admin-section.is-hidden {
+            display: none !important;
+        }
+        
+        /* ADDED: Styles pour la liste d'articles (similaire à games-list) */
+        .articles-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+        
+        .article-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md);
+            background: rgba(31, 42, 68, 0.3);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            transition: all var(--transition-base);
+        }
+        
+        .article-item:hover {
+            background: rgba(31, 42, 68, 0.5);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        
+        /* ADDED: Styles pour la liste équipe */
+        .team-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+        
+        .team-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            background: rgba(31, 42, 68, 0.3);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            transition: all var(--transition-base);
+        }
+        
+        .team-item:hover {
+            background: rgba(31, 42, 68, 0.5);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        
+        .article-item-info {
+            flex: 1;
+        }
+        
+        .article-item-title {
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text-primary);
+            margin-bottom: var(--spacing-xs);
+            font-size: 1.125em;
+        }
+        
+        .article-item-meta {
+            display: flex;
+            gap: var(--spacing-md);
+            flex-wrap: wrap;
+            font-size: 0.875em;
+            color: var(--color-text-secondary);
+        }
+        
+        .article-category-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--color-accent);
+            font-size: 0.8125em;
+            font-weight: var(--font-weight-medium);
+        }
+        
+        .article-item-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+        
+        /* ADDED: Styles pour la liste de médias */
+        .media-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+        }
+        
+        /* ADDED: Styles pour la grille de médias */
+        .media-grid {
+            gap: var(--spacing-lg);
+        }
+        
+        /* ADDED: Styles pour les cards médias admin (scopé) */
+        .media-card {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: rgba(31, 42, 68, 0.3);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            transition: all var(--transition-base);
+            overflow: hidden;
+            cursor: move;
+            width: 280px;
+            position: relative;
+        }
+        
+        .media-card:hover {
+            background: rgba(31, 42, 68, 0.5);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        
+        /* ADDED: Feedback visuel pour le drag & drop */
+        .media-card.is-dragging {
+            opacity: 0.6;
+        }
+        
+        .media-folder-card.is-drop-target {
+            outline: 2px dashed var(--color-accent);
+            outline-offset: 4px;
+            transform: translateY(-2px);
+            background: rgba(59, 130, 246, 0.15) !important;
+            border-color: var(--color-accent) !important;
+        }
+        
+        /* ADDED: Bouton kebab pour les dossiers */
+        .folder-kebab {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-primary);
+            font-size: 1.2em;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-base);
+            z-index: 10;
+            opacity: 0;
+        }
+        
+        .media-folder-card:hover .folder-kebab,
+        .folder-kebab:focus {
+            opacity: 1;
+        }
+        
+        .folder-kebab:hover {
+            background: rgba(31, 42, 68, 0.95);
+            border-color: var(--color-accent);
+        }
+        
+        /* ADDED: Menu flottant pour les dossiers */
+        .folder-menu {
+            position: absolute;
+            top: 48px;
+            right: 8px;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            padding: 4px;
+            min-width: 160px;
+            z-index: 100;
+            display: none;
+        }
+        
+        .folder-menu.is-open {
+            display: block;
+        }
+        
+        .folder-menu button {
+            display: block;
+            width: 100%;
+            padding: 8px 12px;
+            text-align: left;
+            background: transparent;
+            border: none;
+            color: var(--color-text-primary);
+            font-size: 0.875em;
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            transition: all var(--transition-base);
+        }
+        
+        .folder-menu button:hover {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--color-accent);
+        }
+        
+        /* ADDED: Barre de drop en haut */
+        .media-dropbar {
+            display: none;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            padding: 12px;
+            border-radius: 14px;
+            margin: 12px 0 18px;
+            background: rgba(10, 18, 34, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+        }
+        
+        .media-dropbar.is-open {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        
+        .media-dropbar__title {
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text-primary);
+            font-size: 0.875em;
+            white-space: nowrap;
+        }
+        
+        .media-dropbar__targets {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .media-drop-target {
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            background: rgba(255, 255, 255, 0.06);
+            cursor: pointer;
+            color: var(--color-text-primary);
+            font-size: 0.875em;
+            transition: all var(--transition-base);
+        }
+        
+        .media-drop-target:hover {
+            background: rgba(255, 255, 255, 0.10);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        
+        .media-drop-target.is-drop-target {
+            outline: 2px dashed var(--color-accent);
+            outline-offset: 2px;
+            background: rgba(59, 130, 246, 0.15);
+            border-color: var(--color-accent);
+        }
+        
+        .media-drop-target.is-current {
+            opacity: 0.55;
+            border-style: dashed;
+            pointer-events: none;
+            cursor: not-allowed;
+        }
+        
+        /* ADDED: Styles pour le bouton disabled dans le modal */
+        #btn-confirm-move-media:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* ADDED: Style pour les options disabled dans le select (browser natif ok) */
+        #moveMediaFolderSelect option:disabled {
+            color: var(--color-text-secondary);
+            font-style: italic;
+        }
+        
+        .media-thumb {
+            width: 100%;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            background: rgba(31, 42, 68, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            aspect-ratio: 16 / 9;
+        }
+        
+        .media-thumb img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+        }
+        
+        /* ADDED: Bouton kebab */
+        .media-kebab {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-primary);
+            font-size: 1.2em;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-base);
+            z-index: 100;
+            opacity: 0;
+            pointer-events: auto;
+        }
+        
+        .media-thumb:hover .media-kebab,
+        .media-kebab:focus {
+            opacity: 1;
+        }
+        
+        .media-kebab:hover {
+            background: rgba(31, 42, 68, 0.95);
+            border-color: var(--color-accent);
+        }
+        
+        /* ADDED: Meta (folder label + URL) */
+        .media-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .media-folder-label {
+            font-size: 11px;
+            color: var(--color-text-secondary);
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .media-url {
+            font-size: 12px;
+            opacity: 0.85;
+            color: var(--color-text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        /* ADDED: Menu flottant */
+        .media-menu {
+            position: absolute;
+            top: 48px;
+            right: 8px;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            padding: 4px;
+            min-width: 160px;
+            z-index: 1001;
+            display: none;
+            pointer-events: auto;
+        }
+        
+        .media-menu.is-open {
+            display: block;
+        }
+        
+        .media-menu button {
+            display: block;
+            width: 100%;
+            padding: 8px 12px;
+            text-align: left;
+            background: transparent;
+            border: none;
+            color: var(--color-text-primary);
+            font-size: 0.875em;
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            transition: all var(--transition-base);
+        }
+        
+        .media-menu button:hover {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--color-accent);
+        }
+        
+        .media-card .media-actions {
+            display: none;
+        }
+        
+        /* Legacy: garder compatibilité avec .media-item si utilisé ailleurs */
+        .media-item {
+            background: rgba(31, 42, 68, 0.3);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            transition: all var(--transition-base);
+        }
+        
+        .media-item:hover {
+            background: rgba(31, 42, 68, 0.5);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        
+        /* ADDED: Styles pour la grille de dossiers */
+        .media-folders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+        }
+        
+        .media-folder-card {
+            background: rgba(31, 42, 68, 0.3);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+        
+        .media-folder-card:hover {
+            background: rgba(31, 42, 68, 0.5);
+            border-color: rgba(59, 130, 246, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        /* ADDED: Styles pour la drop zone flottante */
+        .media-dropzone {
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            z-index: 2000;
+            display: none;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-lg);
+            min-width: 200px;
+            max-width: 300px;
+        }
+        
+        .media-dropzone.is-open {
+            display: block;
+        }
+        
+        .media-dropzone__title {
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text-primary);
+            margin-bottom: var(--spacing-md);
+            font-size: 1em;
+        }
+        
+        .media-dropzone__list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+        }
+        
+        .media-dropzone__list button {
+            display: block;
+            width: 100%;
+            margin-top: 8px;
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: rgba(31, 42, 68, 0.3);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            color: var(--color-text-primary);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            text-align: left;
+        }
+        
+        .media-dropzone__list button:hover,
+        .media-dropzone__list button.drag-over {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: var(--color-accent);
+            color: var(--color-accent);
+        }
+        
+        .media-preview {
+            width: 100%;
+            height: 120px;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            margin-bottom: var(--spacing-sm);
+            background: rgba(31, 42, 68, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .media-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .media-url {
+            font-size: 0.75em;
+            color: var(--color-text-secondary);
+            word-break: break-all;
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .media-actions {
+            display: flex;
+            gap: var(--spacing-xs);
+        }
+        
+        .media-actions .btn {
+            flex: 1;
+            font-size: 0.875em;
+        }
+        
+        /* ADDED: Alignement spécifique pour les boutons média */
+        .media-item .media-actions .btn {
+            height: 36px;
+            padding: 0 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875em;
+        }
+        
+        .media-picker-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: var(--spacing-md);
+            max-height: 60vh;
+            overflow-y: auto;
+            padding: var(--spacing-md);
+        }
+        
+        .media-picker-item {
+            background: rgba(31, 42, 68, 0.3);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-sm);
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+        
+        .media-picker-item:hover {
+            background: rgba(31, 42, 68, 0.5);
+            border-color: var(--color-accent);
+        }
+        
+        .media-picker-preview {
+            width: 100%;
+            height: 100px;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            margin-bottom: var(--spacing-xs);
+            background: rgba(31, 42, 68, 0.5);
+        }
+        
+        .media-picker-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* ADDED: Styles pour le modal */
+        .admin-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 10000;
+        }
+        
+        .admin-modal.is-open {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+        }
+        
+        /* ADDED: Media picker modal doit être au-dessus de la modale équipe */
+        #mediaPickerModal {
+            z-index: 20000 !important;
+        }
+        #mediaPickerModal .admin-modal-overlay {
+            z-index: 20000 !important;
+        }
+        #mediaPickerModal .admin-modal-content {
+            z-index: 20001 !important;
+        }
+        #mediaPickerModal .admin-modal-header {
+            z-index: 20002 !important;
+        }
+        #mediaPickerModal .admin-modal-close {
+            z-index: 20003 !important;
+        }
+        
+        .admin-modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            z-index: 10000;
+            pointer-events: auto;
+        }
+        
+        .admin-modal-content {
+            position: relative;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-2xl);
+            max-width: 700px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-xl);
+            z-index: 10001;
+            pointer-events: auto;
+        }
+        
+        .admin-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xl);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 1px solid var(--color-border);
+            position: relative;
+            z-index: 10002;
+            pointer-events: auto;
+        }
+        
+        .admin-modal-header h2 {
+            margin: 0;
+            font-size: 1.75em;
+        }
+        
+        .admin-modal-close {
+            background: transparent;
+            border: none;
+            color: var(--color-text-secondary);
+            font-size: 2em;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-sm);
+            transition: all var(--transition-base);
+            position: relative;
+            z-index: 10003;
+            pointer-events: auto !important;
+        }
+        
+        .admin-modal-close:hover {
+            background: rgba(31, 42, 68, 0.5);
+            color: var(--color-text-primary);
+        }
+        
+        .form-error {
+            display: block;
+            color: #fca5a5;
+            font-size: 0.8125em;
+            margin-top: var(--spacing-xs);
+            min-height: 1.2em;
+        }
+        
+        .form-group input.invalid,
+        .form-group textarea.invalid,
+        .form-group select.invalid,
+        .form-group input.is-invalid,
+        .form-group textarea.is-invalid,
+        .form-group select.is-invalid {
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+        
+        /* ADDED: Styles pour le preview d'image cover */
+        .image-preview {
+            width: 200px;
+            height: 112px;
+            margin-top: var(--spacing-sm);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            background: rgba(31, 42, 68, 0.3);
+            border: 1px solid var(--color-border);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .image-preview__placeholder {
+            color: var(--color-text-secondary);
+            font-size: 0.8125em;
+            text-align: center;
+            padding: var(--spacing-sm);
+        }
+        
+        @media (max-width: 899px) {
+            .admin-modal-content {
+                width: 95%;
+                padding: var(--spacing-lg);
+            }
+        }
+        
+        @media (max-width: 899px) {
+            .admin-container {
+                padding: var(--spacing-lg) var(--spacing-md);
+            }
+            
+            .admin-header h1 {
+                font-size: 2em;
+            }
+            
+            .game-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-md);
+            }
+            
+            .game-item-actions {
+                width: 100%;
+            }
+            
+            .game-item-actions .btn {
+                flex: 1;
+            }
+            
+            .checkbox-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body data-page="admin">
+    <header>
+        <input type="checkbox" id="nav-toggle" class="nav-toggle">
+        <div class="header-top">
+            <div class="header-content">
+                <h1><a href="index.html" style="text-decoration: none; color: inherit;">LE MONT DE LERMITE</a></h1>
+            </div>
+            <div class="header-buttons">
+                <a href="index.html" class="btn btn-secondary">Retour au site</a>
+            </div>
+            <label for="nav-toggle" class="nav-burger" aria-label="Ouvrir le menu">
+                <span></span><span></span><span></span>
+            </label>
+        </div>
+    </header>
+    
+    <main class="page">
+        <div class="admin-container">
+            <div class="admin-header">
+                <h1>Administration – Jeux</h1>
+                <p style="color: var(--color-text-secondary);">Gérez les jeux du site</p>
+            </div>
+            
+            <div class="admin-warning">
+                ⚠️ <strong>Interface locale – pas sécurisée</strong><br>
+                Cette interface est destinée à un usage local uniquement.
+                Une authentification sera nécessaire en production.
+            </div>
+
+    <!-- Admin Top Bar - Outils et compteurs globaux -->
+    <div class="admin-topbar">
+        <div id="adminDemoTools" class="admin-demo-tools">
+            <button class="btn btn-success" id="btn-inject-demo" type="button" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; font-size: 0.9em;">🧩 Injecter contenu démo (RÉEL)</button>
+            <button class="btn btn-danger" id="btn-reset-demo" type="button" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; font-size: 0.9em;">🧹 Reset démo</button>
+        </div>
+        <div id="adminSiteCounters" class="admin-site-counters">
+            <!-- Compteurs injectés dynamiquement -->
+        </div>
+    </div>
+
+                    <!-- ADDED: Onglets Jeux / Articles / Médias / Promo / Équipe -->
+                    <div class="admin-tabs">
+                        <button class="admin-tab active" id="tab-games" data-admin-tab="games" aria-current="page">Jeux</button>
+                        <button class="admin-tab" id="tab-articles" data-admin-tab="articles">Articles</button>
+                        <button class="admin-tab" id="tab-tests" data-admin-tab="tests">Tests</button>
+                        <button class="admin-tab" id="tab-bons-plans" data-admin-tab="bons-plans">Bons plans</button>
+                        <button class="admin-tab" id="tab-media" data-admin-tab="media">Médias</button>
+                        <button class="admin-tab" id="tab-promo" data-admin-tab="promo">Promo</button>
+                        <button class="admin-tab" id="tab-partnership" data-admin-tab="partnership">Partenariat</button>
+                        <button class="admin-tab" id="tab-team" data-admin-tab="team">Équipe</button>
+                        <button class="admin-tab" id="tab-bugs" data-admin-tab="bugs">Bugs</button>
+                        <button class="admin-tab" id="tab-contact" data-admin-tab="contact">Contact</button>
+                        <button class="admin-tab" id="tab-conditions" data-admin-tab="conditions">Conditions</button>
+                        <button class="admin-tab" id="tab-users" data-admin-tab="users">Utilisateurs</button>
+                    </div>
+                    
+                    <!-- Section Jeux -->
+                    <div class="admin-content-section admin-section" id="section-games" data-admin-section="games">
+                        <div class="admin-actions">
+                            <button class="btn btn-primary" id="btn-add-game" type="button">+ Ajouter un jeu</button>
+                            <button class="btn btn-secondary" id="btn-reset-data" type="button">Réinitialiser (data.js)</button>
+                        </div>
+                        
+                        <!-- Liste des jeux -->
+                        <div class="admin-section">
+                            <h2>Liste des jeux</h2>
+                            <div class="games-list" id="adminGamesList">
+                                <!-- Chargé dynamiquement -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ADDED: Section Articles -->
+                    <div class="admin-content-section admin-section is-hidden" id="section-articles" data-admin-section="articles">
+                        <div class="admin-actions">
+                            <button class="btn btn-primary" id="btn-add-article" type="button">+ Ajouter un article</button>
+                            <button class="btn btn-secondary" id="btn-reset-articles" type="button">Réinitialiser (data.js)</button>
+                        </div>
+                        
+                        <!-- Liste des articles -->
+                        <div class="admin-section">
+                            <h2>Liste des articles</h2>
+                            <div class="articles-list" id="adminArticlesList">
+                                <!-- Chargé dynamiquement -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ADDED: Section Tests -->
+                    <div class="admin-content-section admin-section is-hidden" id="section-tests" data-admin-section="tests">
+                        <div class="admin-actions">
+                            <button class="btn btn-primary" id="btn-add-test" type="button">+ Ajouter un test</button>
+                            <button class="btn btn-secondary" id="btn-reset-tests" type="button">Réinitialiser (data.js)</button>
+                        </div>
+
+                        <!-- Liste des tests -->
+                        <div class="admin-section">
+                            <h2>Liste des tests</h2>
+                            <div class="tests-list" id="adminTestsList">
+                                <!-- Chargé dynamiquement -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ADDED: Section Bons plans -->
+                    <div class="admin-content-section admin-section is-hidden" id="section-bons-plans" data-admin-section="bons-plans">
+                        <div class="admin-actions">
+                            <button class="btn btn-primary" id="btn-add-bon-plan" type="button">+ Ajouter un bon plan</button>
+                            <button class="btn btn-secondary" id="btn-reset-bons-plans" type="button">Réinitialiser (data.js)</button>
+                        </div>
+
+                        <!-- ADDED: Zone de test admin -->
+                        <div id="admin-test-panel" style="display: none; margin-top: var(--spacing-xl); padding: var(--spacing-lg); background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: var(--radius-lg);">
+                            <h3 style="margin-top: 0; color: var(--color-primary);">🧪 Mode Test Admin - Guide de test manuel</h3>
+                            <p style="margin-bottom: var(--spacing-lg); color: var(--color-text-secondary);">Suivez les étapes pour tester manuellement toutes les fonctionnalités de l'admin. Chaque étape vous guide pour créer du contenu via les formulaires normaux.</p>
+
+                            <div id="test-checklist" style="margin-bottom: var(--spacing-lg);">
+                                <!-- Checklist générée dynamiquement -->
+                            </div>
+
+                            <div style="margin-bottom: var(--spacing-lg);">
+                                <h4 style="margin-bottom: var(--spacing-sm);">📝 Journal de test</h4>
+                                <textarea id="test-log" readonly rows="8" style="width: 100%; font-family: 'Courier New', monospace; font-size: 11px; background: rgba(0, 0, 0, 0.8); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.3); border-radius: var(--radius-sm); padding: var(--spacing-sm); resize: vertical;" placeholder="Les actions et vérifications apparaîtront ici..."></textarea>
+                            </div>
+
+                            <div class="admin-actions">
+                                <button class="btn btn-secondary" id="btn-test-prev" disabled>Étape précédente</button>
+                                <button class="btn btn-primary" id="btn-test-next">Étape suivante</button>
+                                <button class="btn btn-danger" id="btn-test-exit">Quitter le mode test</button>
+                            </div>
+                        </div>
+
+                        <!-- Liste des bons plans -->
+                        <div class="admin-section">
+                            <h2>Liste des bons plans</h2>
+                            <div class="bons-plans-list" id="adminBonsPlansList">
+                                <!-- Chargé dynamiquement -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ADDED: Section Équipe -->
+                    <div class="admin-content-section admin-section is-hidden" id="section-team" data-admin-section="team">
+                        <!-- Section Texte global -->
+                        <div class="admin-section" style="margin-bottom: var(--spacing-2xl);">
+                            <h2>Texte global page Équipe</h2>
+                            <form id="teamAboutForm" style="margin-top: var(--spacing-lg);">
+                                <div class="form-group">
+                                    <label for="team-about-title">Titre *</label>
+                                    <input type="text" id="team-about-title" name="aboutTitle" required placeholder="ex: Équipe">
+                                </div>
+                                <div class="form-group">
+                                    <label for="team-about-text">Texte *</label>
+                                    <textarea id="team-about-text" name="aboutText" rows="3" required placeholder="ex: Les admins et rédacteurs du site"></textarea>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                                </div>
+                                <div id="team-about-feedback" style="margin-top: var(--spacing-md); color: var(--color-accent); font-size: 0.875em; display: none;"></div>
+                            </form>
+                        </div>
+                        
+                        <!-- Liste des membres -->
+                        <div class="admin-section">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-lg);">
+                                <h2 style="margin: 0;">Membres de l'équipe</h2>
+                                <button type="button" class="btn btn-primary" id="btn-add-member">+ Ajouter un auteur</button>
+                            </div>
+                            <div class="team-list" id="adminTeamList">
+                                <!-- Chargé dynamiquement -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ADDED: Section Bugs -->
+                    <div class="admin-content-section admin-section is-hidden" id="section-bugs" data-admin-section="bugs">
+                        <div class="admin-actions">
+                            <button class="btn btn-primary" id="btn-add-bug" type="button">+ Répertorier un bug</button>
+                        </div>
+
+                        <!-- Liste des bugs -->
+                        <div class="admin-section">
+                            <h2>Journal des bugs</h2>
+                            <div class="bugs-list" id="adminBugsList">
+                                <!-- Chargé dynamiquement -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ADDED: Section Contact -->
+                    <div class="admin-content-section admin-section is-hidden" id="section-contact" data-admin-section="contact">
+                        <!-- Liste des demandes de contact -->
+                        <div class="admin-section">
+                            <h2>Demandes de contact</h2>
+                            <div class="contact-requests-list" id="adminContactRequestsList">
+                                <!-- Chargé dynamiquement -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ADDED: Section Conditions -->
+                    <div class="admin-content-section admin-section is-hidden" id="section-conditions" data-admin-section="conditions">
+                        <div class="admin-section">
+                            <h2>Conditions générales d'utilisation</h2>
+                            <form id="conditionsForm">
+                                <div class="form-group">
+                                    <label for="conditions-text">Texte des conditions</label>
+                                    <textarea id="conditions-text" name="conditionsText" rows="20" placeholder="Saisissez le texte des conditions générales..."></textarea>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">Sauvegarder</button>
+                                </div>
+                                <div id="conditions-feedback" style="margin-top: var(--spacing-md); color: var(--color-accent); font-size: 0.875em; display: none;"></div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- ADDED: Section Utilisateurs -->
+                    <div class="admin-content-section admin-section is-hidden" id="section-users" data-admin-section="users">
+                        <!-- Liste des logs utilisateurs -->
+                        <div class="admin-section">
+                            <h2>Logs utilisateurs</h2>
+                            <div class="users-logs-list" id="adminUsersLogsList">
+                                <!-- Chargé dynamiquement -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ADDED: Section Médias -->
+                    <!-- ADDED: Section Promo -->
+                    <div class="admin-content-section admin-section is-hidden" id="section-promo" data-admin-section="promo">
+                        <div class="admin-actions">
+                            <button class="btn btn-primary" id="btn-add-promo" type="button">+ Ajouter une promo</button>
+                        </div>
+                        
+                        <!-- Liste des promos -->
+                        <div class="admin-section">
+                            <h2>Liste des promos</h2>
+                            <div class="promos-list" id="adminPromosList">
+                                <!-- Chargé dynamiquement -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ADDED: Section Partenariat -->
+                    <div class="admin-content-section admin-section is-hidden" id="section-partnership" data-admin-section="partnership">
+                        <div class="admin-actions">
+                            <button class="btn btn-primary" id="btn-add-sponsor" type="button">+ Ajouter un sponsor</button>
+                        </div>
+
+                        <!-- Liste des sponsors -->
+                        <div class="admin-section">
+                            <h2>Liste des sponsors</h2>
+                            <div class="sponsors-list" id="adminSponsorsList">
+                                <!-- Chargé dynamiquement -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-content-section admin-section is-hidden" id="section-media" data-admin-section="media">
+                        <!-- ADDED: Barre de drop pour drag & drop -->
+                        <div id="mediaDropBar" class="media-dropbar" aria-hidden="true">
+                            <div class="media-dropbar__title">Déposer dans :</div>
+                            <div id="mediaDropBarTargets" class="media-dropbar__targets"></div>
+                        </div>
+                        
+                        <div class="admin-actions" style="display: flex; gap: var(--spacing-sm); align-items: center; margin-bottom: var(--spacing-lg);">
+                            <button class="btn btn-secondary" id="mediaBackBtn" type="button" style="display: none;">← Dossiers</button>
+                            <h3 id="mediaTitle" style="margin: 0; flex: 1;">Dossiers</h3>
+                            <button class="btn btn-secondary" id="createFolderBtn" type="button">+ Créer un dossier</button>
+                            <button class="btn btn-primary" id="btn-add-media" type="button">+ Ajouter un média</button>
+                        </div>
+                        
+                        <!-- Vue dossiers -->
+                        <div id="mediaFoldersGrid" class="media-folders-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--spacing-md);">
+                            <!-- Chargé dynamiquement -->
+                        </div>
+                        
+                        <!-- Vue médias d'un dossier -->
+                        <div id="mediaListGrid" class="media-grid" style="display: none; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--spacing-md);">
+                            <!-- Chargé dynamiquement -->
+                        </div>
+                        
+                        <!-- ADDED: Drop zone flottante pour drag & drop -->
+                        <div id="mediaDropZone" class="media-dropzone" aria-hidden="true">
+                            <div class="media-dropzone__title">Déposer dans un dossier</div>
+                            <div id="mediaDropZoneList" class="media-dropzone__list"></div>
+                        </div>
+                    </div>
+            
+            <!-- ADDED: Modal pour créer/éditer un jeu -->
+            <div class="admin-modal" id="gameModal">
+                <div class="admin-modal-overlay" id="modalOverlay"></div>
+                <div class="admin-modal-content">
+                    <div class="admin-modal-header">
+                        <h2 id="modalTitle">Ajouter un jeu</h2>
+                        <button type="button" class="admin-modal-close" id="modalCloseBtn" aria-label="Fermer">×</button>
+                    </div>
+                    <form class="admin-form" id="gameForm">
+                        <input type="hidden" id="game-id" name="id">
+                        
+                        <div class="form-group">
+                            <label for="game-title">Nom du jeu *</label>
+                            <input type="text" id="game-title" name="title" required placeholder="NEON RIFT">
+                            <span class="form-error" id="error-title"></span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="game-platforms">Plateformes * (séparées par des virgules)</label>
+                            <input type="text" id="game-platforms" name="platforms" required placeholder="PC, PS5, Xbox">
+                            <span class="form-error" id="error-platforms"></span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="game-genres">Genres * (séparés par des virgules)</label>
+                            <input type="text" id="game-genres" name="genres" required placeholder="FPS, Action">
+                            <span class="form-error" id="error-genres"></span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="game-status">Statut</label>
+                            <select id="game-status" name="status">
+                                <option value="released">Sorti</option>
+                                <option value="early-access">Accès anticipé</option>
+                                <option value="upcoming">À venir</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="game-releaseDate">Date de sortie</label>
+                            <input type="text" id="game-releaseDate" name="releaseDate" placeholder="2026-01-15">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="game-studio">Studio (optionnel)</label>
+                            <input type="text" id="game-studio" name="studio" placeholder="Nom du studio">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="game-modes">Modes de jeu (optionnel, séparés par des virgules)</label>
+                            <input type="text" id="game-modes" name="modes" placeholder="Solo, Coop, PvP">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="game-difficulty">Difficulté (optionnel)</label>
+                            <select id="game-difficulty" name="difficulty">
+                                <option value="">--</option>
+                                <option value="Facile">Facile</option>
+                                <option value="Normal">Normal</option>
+                                <option value="Difficile">Difficile</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="game-duration">Durée (optionnel)</label>
+                            <input type="text" id="game-duration" name="duration" placeholder="10–20h">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="game-cover">URL de l'image de couverture</label>
+                            <div style="display: flex; gap: var(--spacing-sm); margin-bottom: var(--spacing-sm);">
+                                <input type="text" id="game-cover" name="cover" placeholder="https://..." style="flex: 1;">
+                                <button type="button" class="btn btn-secondary" id="btn-choose-media-game" style="white-space: nowrap;">Choisir dans Médias</button>
+                            </div>
+                            <span class="form-error" id="error-cover"></span>
+                            <!-- ADDED: Preview de l'image cover -->
+                            <div class="image-preview" id="coverPreview">
+                                <img id="coverPreviewImg" alt="Aperçu de la cover" loading="lazy" style="display: none;" />
+                                <div class="image-preview__placeholder" id="coverPreviewPlaceholder">Aperçu indisponible</div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="game-excerpt">Résumé court (shortDesc)</label>
+                            <textarea id="game-excerpt" name="excerpt" rows="3" placeholder="Description courte du jeu..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="game-content">Description complète (optionnel)</label>
+                            <textarea id="game-content" name="content" rows="6" placeholder="Description détaillée du jeu..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="game-isFeatured" name="isFeatured">
+                                <label for="game-isFeatured">Jeu mis en avant</label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Enregistrer</button>
+                            <button type="button" class="btn btn-cancel" id="btn-cancel-modal">Annuler</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ADDED: Modal Article -->
+        <div class="admin-modal" id="articleModal">
+            <div class="admin-modal-overlay" id="articleModalOverlay"></div>
+            <div class="admin-modal-content">
+                <div class="admin-modal-header">
+                    <h2 id="articleModalTitle">Ajouter un article</h2>
+                    <button type="button" class="admin-modal-close" id="articleModalCloseBtn" aria-label="Fermer">×</button>
+                </div>
+                <form class="admin-form" id="articleForm">
+                    <input type="hidden" id="article-id" name="id">
+                    
+                    <div class="form-group">
+                        <label for="article-title">Titre *</label>
+                        <input type="text" id="article-title" name="title" required placeholder="Titre de l'article">
+                        <span class="form-error" id="error-article-title"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="article-category">Catégorie *</label>
+                        <select id="article-category" name="category" required>
+                            <option value="">Sélectionner...</option>
+                            <option value="actu">Actu</option>
+                            <option value="guide">Guide</option>
+                            <option value="bons-plans">Bons plans</option>
+                        </select>
+                        <span class="form-error" id="error-article-category"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="article-relatedGameId">Jeu lié</label>
+                        <select id="article-relatedGameId" name="relatedGameId">
+                            <option value="">Aucun</option>
+                            <!-- Chargé dynamiquement depuis getGamesData() -->
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="article-cover">URL de l'image de couverture</label>
+                        <div style="display: flex; gap: var(--spacing-sm); margin-bottom: var(--spacing-sm);">
+                            <input type="text" id="article-cover" name="cover" placeholder="https://..." style="flex: 1;">
+                            <button type="button" class="btn btn-secondary" id="btn-choose-media-article" style="white-space: nowrap;">Choisir depuis Médias</button>
+                        </div>
+                        <span class="form-error" id="error-article-cover"></span>
+                        <!-- ADDED: Preview de l'image cover article -->
+                        <div class="image-preview" id="articleCoverPreview">
+                            <img id="articleCoverPreviewImg" alt="Aperçu de la cover" loading="lazy" style="display: none;" />
+                            <div class="image-preview__placeholder" id="articleCoverPreviewPlaceholder">Aperçu indisponible</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="article-excerpt">Résumé court</label>
+                        <textarea id="article-excerpt" name="excerpt" rows="3" placeholder="Résumé de l'article..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="article-slug">Slug (URL propre)</label>
+                        <input type="text" id="article-slug" name="slug" placeholder="ex: clair-obscur-expedition-33">
+                        <div style="font-size: 0.8125em; color: var(--color-text-secondary); margin-top: var(--spacing-xs); opacity: 0.8;">Si vide, généré depuis le titre. Conflits auto-résolus.</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="article-authorId">Auteur *</label>
+                        <select id="article-authorId" name="authorId" required>
+                            <option value="">-- Sélectionner un auteur --</option>
+                            <!-- Chargé dynamiquement depuis getTeamMembers() -->
+                        </select>
+                        <input type="hidden" id="article-authorName" name="authorName">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="article-publishedAt">Date de publication</label>
+                        <input type="date" id="article-publishedAt" name="publishedAt">
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="article-featured" name="featured">
+                            <label for="article-featured">Mis en avant</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Contenu de l'article</label>
+                        <div id="article-blocks-builder" style="margin-top: var(--spacing-sm);">
+                            <div style="display: flex; gap: var(--spacing-sm); margin-bottom: var(--spacing-md); flex-wrap: wrap;">
+                                <button type="button" class="btn btn-secondary" id="btn-add-block-text" style="font-size: 0.875em;">+ Texte</button>
+                                <button type="button" class="btn btn-secondary" id="btn-add-block-heading" style="font-size: 0.875em;">+ Titre</button>
+                                <button type="button" class="btn btn-secondary" id="btn-add-block-image" style="font-size: 0.875em;">+ Image</button>
+                                <button type="button" class="btn btn-secondary" id="btn-add-block-offer" style="font-size: 0.875em;">+ Offre</button>
+                                <button type="button" class="btn btn-secondary" id="btn-add-block-youtube" style="font-size: 0.875em;">+ YouTube</button>
+                                <button type="button" class="btn btn-secondary" id="btn-add-block-twitter" style="font-size: 0.875em;">+ X</button>
+                            </div>
+                            <div id="article-blocks-list" style="display: flex; flex-direction: column; gap: var(--spacing-md);"></div>
+                        </div>
+                        <!-- Fallback: ancien champ content (caché si blocks utilisé) -->
+                        <div class="form-group" style="margin-top: var(--spacing-lg);">
+                            <label for="article-content">Contenu complet (optionnel - utilisé si aucun bloc)</label>
+                            <textarea id="article-content" name="content" rows="8" placeholder="Contenu détaillé de l'article..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="articleSaveBtn">Enregistrer</button>
+                        <button type="button" class="btn btn-cancel" id="btn-cancel-article-modal">Annuler</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- ADDED: Modal Ajouter Média -->
+        <div class="admin-modal" id="mediaModal">
+            <div class="admin-modal-overlay" id="mediaModalOverlay"></div>
+            <div class="admin-modal-content">
+                <div class="admin-modal-header">
+                    <h2>Ajouter un média</h2>
+                    <button type="button" class="admin-modal-close" id="mediaModalCloseBtn" data-modal-close aria-label="Fermer">×</button>
+                </div>
+                <form class="admin-form" id="mediaForm">
+                    <div class="form-group">
+                        <label for="media-url">URL de l'image *</label>
+                        <input type="text" id="media-url" name="url" required placeholder="https://...">
+                        <span class="form-error" id="error-media-url"></span>
+                        <!-- ADDED: Preview de l'image -->
+                        <div class="image-preview" id="mediaPreview">
+                            <img id="mediaPreviewImg" alt="Aperçu" loading="lazy" style="display: none;" />
+                            <div class="image-preview__placeholder" id="mediaPreviewPlaceholder">Aperçu indisponible</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="media-folder">Dossier</label>
+                        <input type="text" id="media-folder" name="folder" placeholder="Non classé" value="Non classé">
+                        <span class="form-error" id="error-media-folder"></span>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                        <button type="button" class="btn btn-cancel" id="btn-cancel-media-modal">Annuler</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- ADDED: Modal Sélectionner Média -->
+        <div class="admin-modal" id="mediaPickerModal">
+            <div class="admin-modal-overlay" id="mediaPickerModalOverlay"></div>
+            <div class="admin-modal-content" style="max-width: 900px;">
+                <div class="admin-modal-header">
+                    <h2>Choisir un média</h2>
+                    <button type="button" class="admin-modal-close" id="mediaPickerModalCloseBtn" data-modal-close aria-label="Fermer">×</button>
+                </div>
+                <div style="margin-bottom: var(--spacing-lg);">
+                    <div style="display: flex; gap: var(--spacing-sm); margin-bottom: var(--spacing-sm);">
+                        <input type="text" id="mediaSearchInput" placeholder="Rechercher par URL..." style="flex: 1; padding: var(--spacing-sm); border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text-primary);">
+                        <select id="mediaPickerFolderFilter" style="padding: var(--spacing-sm); border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text-primary);">
+                            <option value="">Tous les dossiers</option>
+                            <option value="Non classé">Non classé</option>
+                        </select>
+                    </div>
+                    <div id="mediaCount" style="font-size: 0.875em; color: var(--color-text-secondary);"></div>
+                </div>
+                <div class="media-picker-list" id="mediaPickerList">
+                    <!-- Chargé dynamiquement -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- ADDED: Modal Déplacer Média -->
+        <div class="admin-modal" id="moveMediaModal">
+            <div class="admin-modal-overlay" id="moveMediaModalOverlay"></div>
+            <div class="admin-modal-content" style="max-width: 400px;">
+                <div class="admin-modal-header">
+                    <h2>Déplacer le média</h2>
+                    <button type="button" class="admin-modal-close" id="moveMediaModalCloseBtn" data-modal-close aria-label="Fermer">×</button>
+                </div>
+                <div class="admin-form">
+                    <div class="form-group">
+                        <label for="moveMediaFolderSelect">Choisir un dossier</label>
+                        <select id="moveMediaFolderSelect" style="width: 100%; padding: var(--spacing-sm); border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text-primary);">
+                            <option value="">Chargement...</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" id="btn-confirm-move-media">Déplacer</button>
+                        <button type="button" class="btn btn-cancel" id="btn-cancel-move-media">Annuler</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ADDED: Modal Renommer Dossier -->
+        <div class="admin-modal" id="renameFolderModal">
+            <div class="admin-modal-overlay" id="renameFolderModalOverlay"></div>
+            <div class="admin-modal-content" style="max-width: 400px;">
+                <div class="admin-modal-header">
+                    <h2>Renommer le dossier</h2>
+                    <button type="button" class="admin-modal-close" id="renameFolderModalCloseBtn" data-modal-close aria-label="Fermer">×</button>
+                </div>
+                <form class="admin-form" id="renameFolderForm">
+                    <div class="form-group">
+                        <label for="renameFolderInput">Nom du dossier</label>
+                        <input type="text" id="renameFolderInput" name="folderName" required placeholder="Nom du dossier">
+                        <span class="form-error" id="error-rename-folder"></span>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="btn-confirm-rename-folder">Renommer</button>
+                        <button type="button" class="btn btn-cancel" id="btn-cancel-rename-folder">Annuler</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <p>&copy; 2026 LE MONT DE LERMITE</p>
+    </footer>
+    
+    <!-- ADDED: Modal Éditer membre équipe -->
+    <div class="admin-modal" id="teamMemberModal">
+        <div class="admin-modal-overlay" id="teamMemberModalOverlay"></div>
+        <div class="admin-modal-content">
+            <div class="admin-modal-header">
+                <h2 id="teamMemberModalTitle">Éditer membre</h2>
+                <button type="button" class="admin-modal-close" id="teamMemberModalCloseBtn" aria-label="Fermer">×</button>
+            </div>
+            <form id="teamMemberForm">
+                <input type="hidden" id="team-member-id" name="id">
+                
+                <div class="form-group">
+                    <label for="team-member-name">Nom *</label>
+                    <input type="text" id="team-member-name" name="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="team-member-role-select">Rôle *</label>
+                    <select id="team-member-role-select" name="role" required>
+                        <option value="directeur">Directeur</option>
+                        <option value="createur">Créateur</option>
+                        <option value="redacteur">Rédacteur</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="team-member-title">Titre (optionnel)</label>
+                    <input type="text" id="team-member-title" name="title" placeholder="ex: Créateur de contenu (YouTube/TikTok) • Directeur du site">
+                </div>
+                
+                <div class="form-group">
+                    <label for="team-member-tagline">Tagline (optionnel, legacy)</label>
+                    <input type="text" id="team-member-tagline" name="tagline" placeholder="ex: Créateur de contenu (YouTube/TikTok) • Directeur du site">
+                </div>
+                
+                <div class="form-group">
+                    <label for="team-member-bio">Bio (optionnel)</label>
+                    <textarea id="team-member-bio" name="bio" rows="4" placeholder="Description du membre..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="team-member-slug">Slug (optionnel, auto-généré si vide)</label>
+                    <input type="text" id="team-member-slug" name="slug" placeholder="ex: pingon-clement">
+                    <div style="font-size: 0.8125em; color: var(--color-text-secondary); margin-top: var(--spacing-xs); opacity: 0.8;">Si vide, généré depuis le nom. Conflits auto-résolus.</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="team-member-order">Ordre d'affichage *</label>
+                    <input type="number" id="team-member-order" name="order" min="1" required value="1">
+                </div>
+                
+                <div class="form-group">
+                    <label for="team-member-avatar-type">Type d'avatar *</label>
+                    <select id="team-member-avatar-type" name="avatarType" required>
+                        <option value="initials">Initiales</option>
+                        <option value="image">Image</option>
+                        <option value="url">URL (legacy)</option>
+                        <option value="media">Médiathèque (legacy)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="team-member-avatar-image-group" style="display: none;">
+                    <label for="team-member-avatar-image-url">URL Image Avatar</label>
+                    <input type="url" id="team-member-avatar-image-url" name="avatarImageUrl" placeholder="https://... ou data:image/...">
+                    <button type="button" class="btn btn-secondary" id="team-member-pick-avatar-media" style="width: 100%; margin-top: var(--spacing-sm);">Choisir depuis Médias</button>
+                    
+                    <div class="avatar-cropper" id="avatarCropper" style="margin-top: var(--spacing-md);">
+                        <div class="avatar-cropper__circle" id="avatarCropCircle" style="cursor: move;">
+                            <img id="avatarCropImg" alt="Aperçu avatar" style="display: none;">
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: var(--spacing-md);">
+                        <label for="avatarZoom" style="display: block; margin-bottom: var(--spacing-xs); font-size: 0.875em;">Zoom: <span id="avatarZoomValue">1.00</span>x</label>
+                        <input type="range" id="avatarZoom" min="1" max="3" step="0.01" value="1" style="width: 100%;">
+                    </div>
+                    
+                    <button type="button" class="btn btn-secondary" id="avatarResetCrop" style="width: 100%; margin-top: var(--spacing-sm);">Réinitialiser cadrage</button>
+                </div>
+                
+                <div class="form-group" id="team-member-avatar-url-group" style="display: none;">
+                    <label for="team-member-avatar-url">URL Avatar (legacy)</label>
+                    <input type="url" id="team-member-avatar-url" name="avatarUrl" placeholder="https://...">
+                </div>
+                
+                <div class="form-group" id="team-member-avatar-media-group" style="display: none;">
+                    <label>Avatar depuis Médiathèque (legacy)</label>
+                    <button type="button" class="btn btn-secondary" id="team-member-pick-photo" style="width: 100%;">Choisir dans Médias</button>
+                    <input type="hidden" id="team-member-avatar-media-id" name="avatarMediaId">
+                    <div id="team-member-photo-preview" style="margin-top: var(--spacing-sm); width: 120px; height: 120px; border-radius: 50%; background: rgba(59, 130, 246, 0.1); border: 2px solid rgba(59, 130, 246, 0.3); overflow: hidden; display: none; align-items: center; justify-content: center;">
+                        <img id="team-member-photo-img" src="" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                </div>
+                
+                <div class="form-group" id="team-member-avatar-initials-group">
+                    <label for="team-member-initials">Initiales (2-3 lettres, optionnel)</label>
+                    <input type="text" id="team-member-initials" name="initials" maxlength="3" placeholder="ex: PC">
+                    <div style="font-size: 0.8125em; color: var(--color-text-secondary); margin-top: var(--spacing-xs); opacity: 0.8;">Si vide, généré automatiquement depuis le nom.</div>
+                </div>
+                
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: var(--spacing-sm);">
+                        <input type="checkbox" id="team-member-is-active" name="isActive" checked>
+                        <span>Membre actif (affiché sur la page équipe)</span>
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label>Liens (optionnels - doivent commencer par http:// ou https://)</label>
+                    <input type="url" id="team-member-youtube" name="youtube" placeholder="YouTube URL">
+                    <input type="url" id="team-member-tiktok" name="tiktok" placeholder="TikTok URL" style="margin-top: var(--spacing-sm);">
+                    <input type="url" id="team-member-twitch" name="twitch" placeholder="Twitch URL" style="margin-top: var(--spacing-sm);">
+                    <input type="url" id="team-member-site" name="site" placeholder="Site web URL" style="margin-top: var(--spacing-sm);">
+                </div>
+                
+                <div class="admin-modal-actions">
+                    <button type="button" class="btn btn-secondary" id="team-member-cancel">Annuler</button>
+                    <button type="button" class="btn btn-cancel" id="team-member-delete" style="display: none;">Supprimer</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- ADDED: Modal Promo -->
+    <div class="admin-modal" id="promoModal">
+        <div class="admin-modal-overlay" id="promoModalOverlay"></div>
+        <div class="admin-modal-content">
+            <div class="admin-modal-header">
+                <h2 id="promoModalTitle">Ajouter une promo</h2>
+                <button type="button" class="admin-modal-close" id="promoModalCloseBtn" aria-label="Fermer">×</button>
+            </div>
+            <form class="admin-form" id="promoForm">
+                <input type="hidden" id="promo-id" name="id">
+                
+                <div class="form-group">
+                    <label for="promo-title">Titre *</label>
+                    <input type="text" id="promo-title" name="title" required placeholder="Titre de la promo">
+                    <span class="form-error" id="error-promo-title"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="promo-url">URL de l'offre *</label>
+                    <input type="url" id="promo-url" name="url" required placeholder="https://...">
+                    <span class="form-error" id="error-promo-url"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="promo-imageUrl">URL de l'image</label>
+                    <div style="display: flex; gap: var(--spacing-sm); margin-bottom: var(--spacing-sm);">
+                        <input type="text" id="promo-imageUrl" name="imageUrl" placeholder="https://..." style="flex: 1;">
+                        <button type="button" class="btn btn-secondary" id="btn-choose-media-promo" style="white-space: nowrap;">Choisir depuis Médias</button>
+                    </div>
+                    <span class="form-error" id="error-promo-imageUrl"></span>
+                    <div class="image-preview" id="promoImagePreview">
+                        <img id="promoImagePreviewImg" alt="Aperçu" loading="lazy" style="display: none;" />
+                        <div class="image-preview__placeholder" id="promoImagePreviewPlaceholder">Aperçu indisponible</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="promo-promo">Réduction (%)</label>
+                    <input type="text" id="promo-promo" name="promo" placeholder="Ex: -20%">
+                </div>
+                
+                <div class="form-group">
+                    <label for="promo-oldPrice">Prix original</label>
+                    <input type="text" id="promo-oldPrice" name="oldPrice" placeholder="Ex: 59,99 €">
+                </div>
+                
+                <div class="form-group">
+                    <label for="promo-price">Prix promo</label>
+                    <input type="text" id="promo-price" name="price" placeholder="Ex: 47,99 €">
+                </div>
+                
+                <div class="form-group">
+                    <label for="promo-buttonText">Texte du bouton</label>
+                    <input type="text" id="promo-buttonText" name="buttonText" placeholder="Voir l'offre" value="Voir l'offre">
+                </div>
+                
+                <div class="form-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="promo-newTab" name="newTab" checked>
+                        <label for="promo-newTab">Ouvrir dans un nouvel onglet</label>
+                    </div>
+                </div>
+                
+                <div class="admin-modal-actions">
+                    <button type="button" class="btn btn-secondary" id="promo-cancel">Annuler</button>
+                    <button type="button" class="btn btn-cancel" id="promo-delete" style="display: none;">Supprimer</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ADDED: Modal Sponsor -->
+    <div class="admin-modal" id="sponsorModal">
+        <div class="admin-modal-overlay" id="sponsorModalOverlay"></div>
+        <div class="admin-modal-content">
+            <div class="admin-modal-header">
+                <h2 id="sponsorModalTitle">Ajouter un sponsor</h2>
+                <button type="button" class="admin-modal-close" id="sponsorModalCloseBtn" aria-label="Fermer">×</button>
+            </div>
+            <form class="admin-form" id="sponsorForm">
+                <input type="hidden" id="sponsor-id" name="id">
+
+                <div class="form-group">
+                    <label for="sponsor-title">Nom du sponsor *</label>
+                    <input type="text" id="sponsor-title" name="title" required placeholder="Nom du partenaire">
+                    <span class="form-error" id="error-sponsor-title"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="sponsor-subtitle">Texte court</label>
+                    <input type="text" id="sponsor-subtitle" name="subtitle" placeholder="Ex: -20% sur tous les jeux">
+                    <span class="form-error" id="error-sponsor-subtitle"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="sponsor-ctaUrl">URL du sponsor *</label>
+                    <input type="url" id="sponsor-ctaUrl" name="ctaUrl" required placeholder="https://...">
+                    <span class="form-error" id="error-sponsor-ctaUrl"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="sponsor-ctaText">Texte du bouton</label>
+                    <input type="text" id="sponsor-ctaText" name="ctaText" placeholder="Découvrir" value="Découvrir">
+                    <span class="form-error" id="error-sponsor-ctaText"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="sponsor-imageUrl">URL de l'image</label>
+                    <div style="display: flex; gap: var(--spacing-sm); margin-bottom: var(--spacing-sm);">
+                        <input type="text" id="sponsor-imageUrl" name="imageUrl" placeholder="https://..." style="flex: 1;">
+                        <button type="button" class="btn btn-secondary" id="btn-choose-media-sponsor" style="white-space: nowrap;">Choisir depuis Médias</button>
+                    </div>
+                    <span class="form-error" id="error-sponsor-imageUrl"></span>
+                    <div class="image-preview" id="sponsorImagePreview">
+                        <img id="sponsorImagePreviewImg" alt="Aperçu" loading="lazy" style="display: none;" />
+                        <div class="image-preview__placeholder" id="sponsorImagePreviewPlaceholder">Aperçu indisponible</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="sponsor-openNewTab" name="openNewTab" checked>
+                        Ouvrir dans un nouvel onglet
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="sponsor-active" name="active">
+                        Actif
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label for="sponsor-startAt">Date de début (optionnel)</label>
+                    <input type="date" id="sponsor-startAt" name="startAt">
+                    <span class="form-error" id="error-sponsor-startAt"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="sponsor-endAt">Date de fin (optionnel)</label>
+                    <input type="date" id="sponsor-endAt" name="endAt">
+                    <span class="form-error" id="error-sponsor-endAt"></span>
+                </div>
+
+                <div class="admin-modal-actions">
+                    <button type="button" class="btn btn-secondary" id="sponsor-cancel">Annuler</button>
+                    <button type="button" class="btn btn-cancel" id="sponsor-delete" style="display: none;">Supprimer</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ADDED: Modal Test -->
+    <div class="admin-modal" id="testModal">
+        <div class="admin-modal-overlay" id="testModalOverlay"></div>
+        <div class="admin-modal-content">
+            <div class="admin-modal-header">
+                <h2 id="testModalTitle">Ajouter un test</h2>
+                <button type="button" class="admin-modal-close" id="testModalCloseBtn" aria-label="Fermer">×</button>
+            </div>
+            <form class="admin-form" id="testForm">
+                <input type="hidden" id="test-id" name="id">
+                <input type="hidden" id="test-slug" name="slug">
+
+                <div class="form-group">
+                    <label for="test-title">Titre *</label>
+                    <input type="text" id="test-title" name="title" required placeholder="Titre du test">
+                    <span class="form-error" id="error-test-title"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="test-gameId">Jeu lié *</label>
+                    <select id="test-gameId" name="gameId" required>
+                        <option value="">Sélectionner un jeu...</option>
+                        <!-- Chargé dynamiquement depuis getGamesData() -->
+                    </select>
+                    <span class="form-error" id="error-test-gameId"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="test-cover">URL de l'image de couverture</label>
+                    <div style="display: flex; gap: var(--spacing-sm); margin-bottom: var(--spacing-sm);">
+                        <input type="text" id="test-cover" name="coverUrl" placeholder="https://..." style="flex: 1;">
+                        <button type="button" class="btn btn-secondary" id="btn-choose-media-test" style="white-space: nowrap;">Choisir depuis Médias</button>
+                    </div>
+                    <span class="form-error" id="error-test-cover"></span>
+                    <!-- Preview de l'image cover test -->
+                    <div class="image-preview" id="testCoverPreview">
+                        <img id="testCoverPreviewImg" alt="Aperçu de la cover" loading="lazy" style="display: none;" />
+                        <div class="image-preview__placeholder" id="testCoverPreviewPlaceholder">Aperçu indisponible</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="test-excerpt">Résumé court</label>
+                    <textarea id="test-excerpt" name="excerpt" rows="2" placeholder="Résumé court du test"></textarea>
+                </div>
+
+                <!-- Système de blocs pour le verdict (comme articles) -->
+                <div class="form-group">
+                    <label>Contenu du verdict (blocs)</label>
+                    <div style="margin-bottom: var(--spacing-md);">
+                        <div style="display: flex; gap: var(--spacing-sm); flex-wrap: wrap;">
+                            <button type="button" class="btn btn-secondary" onclick="addTestBlock('text')" style="font-size: 0.75em;">+ Texte</button>
+                            <button type="button" class="btn btn-secondary" onclick="addTestBlock('heading')" style="font-size: 0.75em;">+ Titre</button>
+                            <button type="button" class="btn btn-secondary" onclick="addTestBlock('image')" style="font-size: 0.75em;">+ Image</button>
+                            <button type="button" class="btn btn-secondary" onclick="addTestBlock('youtube')" style="font-size: 0.75em;">+ YouTube</button>
+                            <button type="button" class="btn btn-secondary" onclick="addTestBlock('offer')" style="font-size: 0.75em;">+ Offre</button>
+                        </div>
+                    </div>
+                    <div id="test-blocks-list" style="min-height: 100px; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--spacing-md); background: rgba(31, 42, 68, 0.1);">
+                        <!-- Les blocs seront ajoutés ici dynamiquement -->
+                    </div>
+                </div>
+
+                <!-- Questionnaire/Critères -->
+                <div class="form-group">
+                    <label>Questionnaire (critères d'évaluation)</label>
+                    <div id="test-criteria-list">
+                        <!-- Les critères seront ajoutés dynamiquement -->
+                    </div>
+                    <button type="button" class="btn btn-secondary" id="btn-add-criterion" style="margin-top: var(--spacing-sm);">+ Ajouter un critère</button>
+                    <div id="test-average-score" style="margin-top: var(--spacing-sm); font-weight: 500; color: var(--color-accent);">
+                        Score moyen: <span id="test-average-score-value">0.0</span>/10
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="test-publishedAt">Date de publication</label>
+                    <input type="datetime-local" id="test-publishedAt" name="publishedAt">
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="test-isFeatured" name="isFeatured">
+                        Mis en avant
+                    </label>
+                </div>
+
+                <div class="admin-modal-actions">
+                    <button type="button" class="btn btn-secondary" id="test-cancel">Annuler</button>
+                    <button type="button" class="btn btn-cancel" id="test-delete" style="display: none;">Supprimer</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ADDED: Modal Bon plan -->
+    <div class="admin-modal" id="bonPlanModal">
+        <div class="admin-modal-overlay" id="bonPlanModalOverlay"></div>
+        <div class="admin-modal-content">
+            <div class="admin-modal-header">
+                <h2 id="bonPlanModalTitle">Ajouter un bon plan</h2>
+                <button type="button" class="admin-modal-close" id="bonPlanModalCloseBtn" aria-label="Fermer">×</button>
+            </div>
+            <form class="admin-form" id="bonPlanForm">
+                <input type="hidden" id="bon-plan-id" name="id">
+                <input type="hidden" id="bon-plan-slug" name="slug">
+
+                <div class="form-group">
+                    <label for="bon-plan-title">Titre *</label>
+                    <input type="text" id="bon-plan-title" name="title" required placeholder="Titre du bon plan">
+                    <span class="form-error" id="error-bon-plan-title"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="bon-plan-cover">URL de l'image de couverture</label>
+                    <div style="display: flex; gap: var(--spacing-sm); margin-bottom: var(--spacing-sm);">
+                        <input type="text" id="bon-plan-cover" name="coverUrl" placeholder="https://..." style="flex: 1;">
+                        <button type="button" class="btn btn-secondary" id="btn-choose-media-bon-plan" style="white-space: nowrap;">Choisir depuis Médias</button>
+                    </div>
+                    <span class="form-error" id="error-bon-plan-cover"></span>
+                    <!-- Preview de l'image cover bon plan -->
+                    <div class="image-preview" id="bonPlanCoverPreview">
+                        <img id="bonPlanCoverPreviewImg" alt="Aperçu de la cover" loading="lazy" style="display: none;" />
+                        <div class="image-preview__placeholder" id="bonPlanCoverPreviewPlaceholder">Aperçu indisponible</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="bon-plan-excerpt">Résumé court</label>
+                    <textarea id="bon-plan-excerpt" name="excerpt" rows="2" placeholder="Résumé court du bon plan"></textarea>
+                </div>
+
+                <!-- Système de blocs pour le bon plan (comme articles) -->
+                <div class="form-group">
+                    <label>Contenu du bon plan (blocs)</label>
+                    <div style="margin-bottom: var(--spacing-md);">
+                        <div style="display: flex; gap: var(--spacing-sm); flex-wrap: wrap;">
+                            <button type="button" class="btn btn-secondary" onclick="addBonPlanBlock('text')" style="font-size: 0.75em;">+ Texte</button>
+                            <button type="button" class="btn btn-secondary" onclick="addBonPlanBlock('heading')" style="font-size: 0.75em;">+ Titre</button>
+                            <button type="button" class="btn btn-secondary" onclick="addBonPlanBlock('image')" style="font-size: 0.75em;">+ Image</button>
+                            <button type="button" class="btn btn-secondary" onclick="addBonPlanBlock('youtube')" style="font-size: 0.75em;">+ YouTube</button>
+                            <button type="button" class="btn btn-secondary" onclick="addBonPlanBlock('offer')" style="font-size: 0.75em;">+ Offre</button>
+                        </div>
+                    </div>
+                    <div id="bon-plan-blocks-list" style="min-height: 100px; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--spacing-md); background: rgba(31, 42, 68, 0.1);">
+                        <!-- Les blocs seront ajoutés ici dynamiquement -->
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="bon-plan-external-url">Lien externe (URL du deal)</label>
+                    <input type="url" id="bon-plan-external-url" name="externalUrl" placeholder="https://...">
+                </div>
+
+                <div class="form-group">
+                    <label for="bon-plan-merchant">Marchand / Source</label>
+                    <input type="text" id="bon-plan-merchant" name="merchant" placeholder="Amazon, Fnac, Instant Gaming...">
+                </div>
+
+                <div class="form-group">
+                    <label>Prix</label>
+                    <div style="display: flex; gap: var(--spacing-sm);">
+                        <div style="flex: 1;">
+                            <label for="bon-plan-price" style="font-size: 0.875em; color: var(--color-text-secondary);">Prix actuel (€)</label>
+                            <input type="number" id="bon-plan-price" name="price" step="0.01" min="0" placeholder="29.99">
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="bon-plan-old-price" style="font-size: 0.875em; color: var(--color-text-secondary);">Ancien prix (€)</label>
+                            <input type="number" id="bon-plan-old-price" name="oldPrice" step="0.01" min="0" placeholder="39.99">
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="bon-plan-discount" style="font-size: 0.875em; color: var(--color-text-secondary);">Réduction (%)</label>
+                            <input type="number" id="bon-plan-discount" name="discountPercent" min="0" max="100" placeholder="20">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="bon-plan-publishedAt">Date de publication</label>
+                    <input type="datetime-local" id="bon-plan-publishedAt" name="publishedAt">
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="bon-plan-isFeatured" name="isFeatured">
+                        Mis en avant (promo du moment)
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="bon-plan-openInNewTab" name="openInNewTab" checked>
+                        Ouvrir le lien externe dans un nouvel onglet
+                    </label>
+                </div>
+
+                <div class="admin-modal-actions">
+                    <button type="button" class="btn btn-secondary" id="bon-plan-cancel">Annuler</button>
+                    <button type="button" class="btn btn-cancel" id="bon-plan-delete" style="display: none;">Supprimer</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ADDED: Modal Bug -->
+    <div class="admin-modal" id="bugModal">
+        <div class="admin-modal-overlay" id="bugModalOverlay"></div>
+        <div class="admin-modal-content">
+            <div class="admin-modal-header">
+                <h2 id="bugModalTitle">Répertorier un bug</h2>
+                <button type="button" class="admin-modal-close" id="bugModalCloseBtn" aria-label="Fermer">×</button>
+            </div>
+            <form class="admin-form" id="bugForm">
+                <input type="hidden" id="bug-id" name="id">
+
+                <div class="form-group">
+                    <label for="bug-title">Titre *</label>
+                    <input type="text" id="bug-title" name="title" required placeholder="Titre du bug">
+                    <span class="form-error" id="error-bug-title"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="bug-desc">Description *</label>
+                    <textarea id="bug-desc" name="desc" rows="4" required placeholder="Description détaillée du bug..."></textarea>
+                    <span class="form-error" id="error-bug-desc"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="bug-severity">Sévérité</label>
+                    <select id="bug-severity" name="severity">
+                        <option value="low">Faible</option>
+                        <option value="medium" selected>Moyen</option>
+                        <option value="high">Élevé</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="bug-page">Page concernée (optionnel)</label>
+                    <input type="text" id="bug-page" name="page" placeholder="ex: page d'accueil, jeux, etc.">
+                </div>
+
+                <div class="form-group">
+                    <label for="bug-reporter">Répertorié par (optionnel)</label>
+                    <input type="text" id="bug-reporter" name="reporter" placeholder="Votre nom">
+                </div>
+
+                <div class="admin-modal-actions">
+                    <button type="button" class="btn btn-secondary" id="bug-cancel">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script type="module" src="./firebase.js"></script>
+    <script src="script.js"></script>
+
+    <!-- Script pour le scroll horizontal de la barre d'onglets admin -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const adminTabs = document.querySelector('.admin-tabs');
+            if (adminTabs) {
+                // Convertir le scroll vertical de la molette en scroll horizontal
+                adminTabs.addEventListener('wheel', function(e) {
+                    if (Math.abs(e.deltaX) < Math.abs(e.deltaY)) {
+                        e.preventDefault();
+                        adminTabs.scrollLeft += e.deltaY;
+                    }
+                }, { passive: false });
+            }
+        });
+    </script>
+</body>
+</html>
+

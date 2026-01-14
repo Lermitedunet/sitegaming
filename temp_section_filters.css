@@ -1,0 +1,45 @@
+/* Styles pour améliorer l'espacement des filtres sur les pages sections */
+.section-filters {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.section-filters .filters-bar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.section-filters .filters-bar input {
+    width: 100%;
+    flex: none;
+}
+
+.section-filters .filters-bar .controls-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    align-items: center;
+}
+
+.section-filters .filters-bar select {
+    min-width: 140px;
+    flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+    .section-filters .filters-bar {
+        flex-direction: row;
+        align-items: flex-end;
+    }
+
+    .section-filters .filters-bar input {
+        flex: 1;
+        margin-right: var(--spacing-sm);
+    }
+
+    .section-filters .filters-bar .controls-group {
+        flex: 0 0 auto;
+    }
+}

@@ -794,11 +794,21 @@ function filterGames(games = null) {
  * Applique les filtres et réaffiche les jeux
  */
 function applyFilters() {
+    // PATCH: Guard général - vérifier que les éléments nécessaires existent sur la page
+    const gamesGrid = document.getElementById('gamesGrid') || document.getElementById('games-grid');
+    if (!gamesGrid) {
+        return; // Pas de grille de jeux sur cette page, rien à faire
+    }
+
+    // PATCH: Sécuriser les variables globales contre undefined
+    const safeSelectedConsoles = Array.isArray(selectedConsoles) ? selectedConsoles : [];
+    const safeSelectedGenres = Array.isArray(selectedGenres) ? selectedGenres : [];
+    const safeSearchText = (typeof searchText === "string") ? searchText : "";
+
     // ADDED: Filtrer les jeux depuis getGamesData() (pas d'accès direct à loadedGames)
     const filteredGames = filterGames(getGamesData());
-    
+
     // Réafficher la grille avec les jeux filtrés (avec pagination)
-    const gamesGrid = document.getElementById('gamesGrid') || document.getElementById('games-grid');
     if (gamesGrid) {
         renderGames(filteredGames, gamesGrid.id, {
             enablePagination: true,
@@ -810,7 +820,7 @@ function applyFilters() {
     const resultsCount = document.getElementById('results-count');
     if (resultsCount) {
         const totalGames = getGamesData().length;
-        if (filteredGames.length === totalGames && selectedConsoles.length === 0 && selectedGenres.length === 0 && searchText === '') {
+        if (filteredGames.length === totalGames && safeSelectedConsoles.length === 0 && safeSelectedGenres.length === 0 && safeSearchText === '') {
             resultsCount.textContent = ''; // Masquer si aucun filtre n'est appliqué
         } else {
             resultsCount.textContent = `${filteredGames.length} jeu${filteredGames.length > 1 ? 'x' : ''} affiché${filteredGames.length > 1 ? 's' : ''}`;
@@ -824,7 +834,11 @@ filterChips.forEach(chip => {
     chip.addEventListener('click', function() {
         const filterType = this.getAttribute('data-filter');
         const filterValue = this.getAttribute('data-value').toLowerCase();
-        
+
+        // PATCH: Sécuriser les variables avant utilisation
+        if (!Array.isArray(selectedConsoles)) selectedConsoles = [];
+        if (!Array.isArray(selectedGenres)) selectedGenres = [];
+
         if (filterType === 'console') {
             // Toggle dans le tableau des consoles
             const index = selectedConsoles.indexOf(filterValue);
@@ -1021,7 +1035,7 @@ function applySortAndFilters() {
     const resultsCount = document.getElementById('results-count');
     if (resultsCount) {
         const totalGames = getGamesData().length;
-        if (filteredGames.length === totalGames && selectedConsoles.length === 0 && selectedGenres.length === 0 && searchText === '') {
+        if (filteredGames.length === totalGames && safeSelectedConsoles.length === 0 && safeSelectedGenres.length === 0 && safeSearchText === '') {
             resultsCount.textContent = ''; // Masquer si aucun filtre n'est appliqué
         } else {
             resultsCount.textContent = `${filteredGames.length} jeu${filteredGames.length > 1 ? 'x' : ''} affiché${filteredGames.length > 1 ? 's' : ''}`;

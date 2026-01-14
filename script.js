@@ -22088,7 +22088,7 @@ function updateAuthButtons() {
   fb.onAuthStateChanged(fb.auth, (user) => {
     if (user) {
       // Utilisateur connecté
-      const isAdmin = ADMIN_EMAILS.includes(user.email);
+      const isAdmin = isAllowedAdmin(user.email);
       const adminButton = isAdmin ? `<a href="admin.html" class="btn btn-outline" style="font-size: 0.875em; margin-right: var(--spacing-sm);">Admin</a>` : '';
 
       authButtonsContainer.innerHTML = `
@@ -22191,6 +22191,15 @@ const ADMIN_EMAILS = [
 ];
 
 /**
+ * ADDED: Vérifie si un email est autorisé à accéder à l'admin
+ * @param {string} email - Email à vérifier
+ * @returns {boolean} - true si autorisé
+ */
+function isAllowedAdmin(email) {
+  return email && ADMIN_EMAILS.includes(email);
+}
+
+/**
  * ADDED: Initialisation centralisée de l'authentification Firebase
  * Gère la protection admin.html, les boutons header et le logout
  */
@@ -22210,8 +22219,9 @@ function initAuthRoutingAndUI() {
     }
 
     // Vérification de la whitelist admin
-    if (isAdminPage && user && !ADMIN_EMAILS.includes(user.email)) {
+    if (isAdminPage && user && !isAllowedAdmin(user.email)) {
       console.warn("[AUTH] Accès admin refusé pour", user.email);
+      alert("Accès administrateur refusé. Vous n'êtes pas autorisé à accéder à cette page.");
       location.href = "index.html";
       return;
     }

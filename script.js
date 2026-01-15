@@ -1271,20 +1271,15 @@ if (!__isAuthPage) {
     document.addEventListener("DOMContentLoaded", function () {
       setTimeout(applySortAndFilters, 100); // Petit délai pour s'assurer que les filtres sont appliqués
       renderHomePromos(); // ADDED: Afficher les promos sur la page principale
-      updateAuthButtons(); // ADDED: Mettre à jour les boutons d'authentification
+      // NOTE: Auth UI maintenant gérée centralement par initAuthRoutingAndUI
     });
   } else {
     setTimeout(applySortAndFilters, 100);
     renderHomePromos(); // ADDED: Afficher les promos sur la page principale
-    updateAuthButtons(); // ADDED: Mettre à jour les boutons d'authentification
+    // NOTE: Auth UI maintenant gérée centralement par initAuthRoutingAndUI
   }
 } else {
-  // Sur login.html et signup.html, seulement updateAuthButtons
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", updateAuthButtons);
-  } else {
-    updateAuthButtons();
-  }
+  // NOTE: Auth UI maintenant gérée centralement par initAuthRoutingAndUI
 }
 
 // ============================================
@@ -22080,74 +22075,169 @@ function handleSignupSubmit(e) {
 /**
  * ADDED: Met à jour l'affichage des boutons d'authentification sur index.html
  */
-function updateAuthButtons() {
-  const authButtonsContainer = document.getElementById("headerAuthButtons");
-  if (!authButtonsContainer) return;
+/**
+ * ÉTAT GLOBAL D'AUTHENTIFICATION
+ * CRITIQUE: Toute redirection doit attendre que authResolved = true
+ */
+let authResolved = false;
+let currentUser = null;
 
-  // PATCH: Vérifier que Firebase est disponible
-  const fb = window.fb;
-  if (!fb || typeof fb.onAuthStateChanged !== "function") {
-    // Firebase pas dispo => fallback UI "non connecté"
-    // Assurer que les boutons login/signup sont visibles
-    const loginButtons = document.querySelectorAll('a[href="login.html"]');
-    const signupButtons = document.querySelectorAll('a[href="signup.html"]');
-    loginButtons.forEach(btn => btn.style.display = 'inline-flex');
-    signupButtons.forEach(btn => btn.style.display = 'inline-flex');
+/**
+ * LOGIQUE DE REDIRECTION CENTRALISÉE
+ * N'exécute les redirections que quand Firebase a confirmé l'état auth
+ */
+function handleAuthRedirects(user) {
+  if (!authResolved) return; // Attendre que Firebase ait confirmé l'état
 
-    authButtonsContainer.innerHTML = `
-            <a href="login.html" class="btn btn-outline" style="font-size: 0.875em;">Se connecter</a>
-            <a href="signup.html" class="btn btn-primary" style="font-size: 0.875em;">S'inscrire</a>
-        `;
+  const isAdminPage = location.pathname.includes("admin.html");
+  const isLoginPage = location.pathname.includes("login.html");
+  const isIndexPage = location.pathname.includes("index.html") || location.pathname === "/";
+
+  // RÈGLE 6: Cas de redirection à corriger
+  if (isLoginPage && user) {
+    // login.html connecté → redirect index
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirect = urlParams.get('redirect');
+    const nextUrl = redirect ? `${redirect}` : 'index.html';
+    console.log(`[AUTH] User logged in on login page, redirecting to: ${nextUrl}`);
+    window.location.href = nextUrl;
     return;
   }
 
-  // Écouter les changements d'état d'authentification Firebase
-  fb.onAuthStateChanged(fb.auth, (user) => {
-    // Gestion de la visibilité des boutons statiques login/signup
-    const loginButtons = document.querySelectorAll('a[href="login.html"]');
-    const signupButtons = document.querySelectorAll('a[href="signup.html"]');
+  if (isAdminPage && !user) {
+    // admin.html non connecté → redirect login
+    location.href = "login.html?redirect=admin.html";
+    return;
+  }
 
-    if (user) {
-      // Utilisateur connecté - cacher les boutons login/signup
-      loginButtons.forEach(btn => btn.style.display = 'none');
-      signupButtons.forEach(btn => btn.style.display = 'none');
+  if (isAdminPage && user && !isAllowedAdmin(user.email)) {
+    // admin.html connecté non admin → redirect index
+    console.warn("[AUTH] Admin access denied for", user.email);
+    alert("Accès administrateur refusé. Vous n'êtes pas autorisé à accéder à cette page.");
+    location.href = "index.html";
+    return;
+  }
 
-      // Utilisateur connecté
-      const isAdmin = isAllowedAdmin(user.email);
-      const adminButton = isAdmin ? `<a href="admin.html" class="btn btn-outline" style="font-size: 0.875em; margin-right: var(--spacing-sm);">Admin</a>` : '';
+  // index.html connecté → OK (pas de redirection nécessaire)
+}
 
-      authButtonsContainer.innerHTML = `
-                ${adminButton}
-                <span style="color: var(--color-text-secondary); font-size: 0.875em; margin-right: var(--spacing-sm);">${escapeHtml(user.email)}</span>
-                <button type="button" class="btn btn-secondary" id="btn-logout" style="font-size: 0.875em;">Se déconnecter</button>
-            `;
+/**
+ * MISE À JOUR DE L'UI APRÈS RÉSOLUTION AUTH
+ */
+function updateAuthUI(user) {
+  if (!authResolved) return;
 
-      const logoutBtn = document.getElementById("btn-logout");
-      if (logoutBtn) {
-        logoutBtn.addEventListener("click", function () {
+  const authButtonsContainer = document.getElementById("headerAuthButtons");
+  if (!authButtonsContainer) return;
+
+  // Gestion de la visibilité des boutons statiques login/signup
+  const loginButtons = document.querySelectorAll('a[href="login.html"]');
+  const signupButtons = document.querySelectorAll('a[href="signup.html"]');
+
+  if (user) {
+    // Utilisateur connecté - cacher les boutons login/signup
+    loginButtons.forEach(btn => btn.style.display = 'none');
+    signupButtons.forEach(btn => btn.style.display = 'none');
+
+    // Bouton Admin uniquement pour les admins (RÈGLE 5)
+    const isAdmin = isAllowedAdmin(user.email);
+    const adminButton = isAdmin ? `<a href="admin.html" class="btn btn-outline" style="font-size: 0.875em; margin-right: var(--spacing-sm);">Admin</a>` : '';
+
+    authButtonsContainer.innerHTML = `
+      ${adminButton}
+      <span style="color: var(--color-text-secondary); font-size: 0.875em; margin-right: var(--spacing-sm);">${escapeHtml(user.email)}</span>
+      <button type="button" class="btn btn-secondary" id="btn-logout" style="font-size: 0.875em;">Se déconnecter</button>
+    `;
+
+    // Gestion du logout (RÈGLE 7)
+    const logoutBtn = document.getElementById("btn-logout");
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", function () {
+        const fb = window.fb;
+        if (fb && fb.signOut) {
           fb.signOut(fb.auth)
             .then(() => {
-              window.location.href = "index.html";
+              console.log("[AUTH] Déconnexion réussie");
+              // Nettoyer l'état et forcer redirection login
+              authResolved = false;
+              currentUser = null;
+              window.location.href = "login.html";
             })
             .catch((error) => {
-              console.error("Erreur lors de la déconnexion:", error);
-              // Fallback: recharger la page
+              console.error("[AUTH] Erreur lors de la déconnexion:", error);
+              // Fallback en cas d'erreur
+              authResolved = false;
+              currentUser = null;
               window.location.reload();
             });
+        }
+      });
+    }
+
+    // Bouton de logout sur admin.html
+    const isAdminPage = location.pathname.includes("admin.html");
+    if (isAdminPage) {
+      let adminLogoutBtn = document.getElementById("admin-logout-btn");
+      if (!adminLogoutBtn) {
+        const header = document.querySelector("header") || document.body;
+        const logoutContainer = document.createElement("div");
+        logoutContainer.style.cssText = `
+          position: fixed;
+          top: 10px;
+          right: 10px;
+          z-index: 1000;
+          background: rgba(0,0,0,0.8);
+          padding: 8px 12px;
+          border-radius: 4px;
+          font-size: 0.875em;
+        `;
+        logoutContainer.innerHTML = `
+          <span style="color: white; margin-right: 8px;">${escapeHtml(user.email)}</span>
+          <button id="admin-logout-btn" style="
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8em;
+          ">Déconnexion</button>
+        `;
+        header.appendChild(logoutContainer);
+        adminLogoutBtn = document.getElementById("admin-logout-btn");
+      }
+
+      if (adminLogoutBtn) {
+        adminLogoutBtn.addEventListener("click", function () {
+          const fb = window.fb;
+          if (fb && fb.signOut) {
+            fb.signOut(fb.auth)
+              .then(() => {
+                authResolved = false;
+                currentUser = null;
+                window.location.href = "login.html";
+              })
+              .catch((error) => {
+                authResolved = false;
+                currentUser = null;
+                window.location.reload();
+              });
+          }
         });
       }
-    } else {
-      // Utilisateur non connecté - afficher les boutons login/signup
-      loginButtons.forEach(btn => btn.style.display = 'inline-flex');
-      signupButtons.forEach(btn => btn.style.display = 'inline-flex');
-
-      // Utilisateur non connecté (déjà géré par le HTML)
-      authButtonsContainer.innerHTML = `
-                <a href="login.html" class="btn btn-outline" style="font-size: 0.875em;">Se connecter</a>
-                <a href="signup.html" class="btn btn-primary" style="font-size: 0.875em;">S'inscrire</a>
-            `;
     }
-  });
+
+  } else {
+    // Utilisateur non connecté - afficher les boutons login/signup
+    loginButtons.forEach(btn => btn.style.display = 'inline-flex');
+    signupButtons.forEach(btn => btn.style.display = 'inline-flex');
+
+    // Utilisateur non connecté (déjà géré par le HTML)
+    authButtonsContainer.innerHTML = `
+      <a href="login.html" class="btn btn-outline" style="font-size: 0.875em;">Se connecter</a>
+      <a href="signup.html" class="btn btn-primary" style="font-size: 0.875em;">S'inscrire</a>
+    `;
+  }
 }
 
 // ADDED: Initialisation des formulaires d'authentification
@@ -22202,15 +22292,7 @@ if (document.getElementById("signupForm")) {
   }
 }
 
-// ADDED: Mettre à jour les boutons d'authentification sur index.html
-if (document.body && !document.body.dataset.page) {
-  // Seulement sur les pages publiques (pas admin)
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", updateAuthButtons);
-  } else {
-    updateAuthButtons();
-  }
-}
+// NOTE: Auth UI maintenant gérée centralement par initAuthRoutingAndUI
 
 // ADDED: Liste des emails autorisés pour admin.html
 const ADMIN_EMAILS = [
@@ -22229,103 +22311,37 @@ function isAllowedAdmin(email) {
 }
 
 /**
- * ADDED: Initialisation centralisée de l'authentification Firebase
- * Gère la protection admin.html, les boutons header et le logout
+ * INITIALISATION CENTRALISÉE DE L'AUTHENTIFICATION
+ * UN SEUL onAuthStateChanged pour éviter les conflits
  */
 function initAuthRoutingAndUI() {
   const fb = window.fb;
   if (!fb || typeof fb.onAuthStateChanged !== "function") {
     console.warn("[AUTH] Firebase indisponible");
+    // Fallback UI pour utilisateurs non connectés
+    const authButtonsContainer = document.getElementById("headerAuthButtons");
+    if (authButtonsContainer) {
+      authButtonsContainer.innerHTML = `
+        <a href="login.html" class="btn btn-outline" style="font-size: 0.875em;">Se connecter</a>
+        <a href="signup.html" class="btn btn-primary" style="font-size: 0.875em;">S'inscrire</a>
+      `;
+    }
     return;
   }
 
-  const isAdminPage = location.pathname.includes("admin.html");
-  const isLoginPage = location.pathname.includes("login.html");
-
+  // UN SEUL LISTENER onAuthStateChanged (RÈGLE 1 et 3)
   fb.onAuthStateChanged(fb.auth, (user) => {
-    console.log(`[AUTH DEBUG] onAuthStateChanged fired - user: ${user?.email || 'null'}, page: ${location.pathname}, isAdminPage: ${isAdminPage}, isLoginPage: ${isLoginPage}`);
+    console.log(`[AUTH] onAuthStateChanged - user: ${user?.email || 'null'}, page: ${location.pathname}, authResolved: ${authResolved}`);
 
-    // Si on est sur login.html et que l'utilisateur est déjà connecté, rediriger
-    if (isLoginPage && user) {
-      const urlParams = new URLSearchParams(window.location.search);
-      const redirect = urlParams.get('redirect');
-      const nextUrl = redirect ? `${redirect}` : 'index.html';
-      console.log(`[AUTH DEBUG] User already logged in on login page, redirecting to: ${nextUrl}`);
-      window.location.href = nextUrl;
-      return;
-    }
+    // RÈGLE 4: Marquer que l'état auth est résolu
+    authResolved = true;
+    currentUser = user;
 
-    if (isAdminPage && !user) {
-      location.href = "login.html?redirect=admin.html";
-      return;
-    }
+    // RÈGLE 1 et 4: Les redirections attendent authResolved = true
+    handleAuthRedirects(user);
 
-    // Vérification de la whitelist admin
-    if (isAdminPage && user && !isAllowedAdmin(user.email)) {
-      console.warn("[AUTH] Accès admin refusé pour", user.email);
-      alert("Accès administrateur refusé. Vous n'êtes pas autorisé à accéder à cette page.");
-      location.href = "index.html";
-      return;
-    }
-
-    // Mise à jour des boutons header
-    updateAuthButtons();
-
-    if (user) {
-      // Utilisateur connecté - stocker l'email pour affichage futur
-      window.currentUserEmail = user.email;
-
-      // Chercher un bouton de logout existant ou en créer un sur admin
-      if (isAdminPage) {
-        let logoutBtn =
-          document.getElementById("logoutBtn") ||
-          document.querySelector('[data-action="logout"]');
-
-        if (!logoutBtn) {
-          // Créer un bouton de logout minimal en haut de la page
-          const header = document.querySelector("header") || document.body;
-          const logoutContainer = document.createElement("div");
-          logoutContainer.style.cssText = `
-                        position: fixed;
-                        top: 10px;
-                        right: 10px;
-                        z-index: 1000;
-                        background: rgba(0,0,0,0.8);
-                        padding: 8px 12px;
-                        border-radius: 4px;
-                        font-size: 0.875em;
-                    `;
-          logoutContainer.innerHTML = `
-                        <span style="color: white; margin-right: 8px;">${escapeHtml(user.email)}</span>
-                        <button id="admin-logout-btn" style="
-                            background: #dc3545;
-                            color: white;
-                            border: none;
-                            padding: 4px 8px;
-                            border-radius: 3px;
-                            cursor: pointer;
-                            font-size: 0.8em;
-                        ">Déconnexion</button>
-                    `;
-          header.appendChild(logoutContainer);
-          logoutBtn = document.getElementById("admin-logout-btn");
-        }
-
-        // Brancher l'événement de logout
-        if (logoutBtn) {
-          logoutBtn.addEventListener("click", function () {
-            fb.signOut(fb.auth)
-              .then(() => {
-                window.location.href = "index.html";
-              })
-              .catch((error) => {
-                console.error("Erreur lors de la déconnexion:", error);
-                window.location.reload();
-              });
-          });
-        }
-      }
-    }
+    // Mise à jour de l'UI après résolution auth
+    updateAuthUI(user);
   });
 }
 

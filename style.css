@@ -1282,6 +1282,9 @@ header p {
     align-items: center;
     gap: 8px;
     overflow-x: auto;
+    overflow-y: visible;
+    position: relative;
+    z-index: 10;
     -webkit-overflow-scrolling: touch;
     backdrop-filter: blur(12px);
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
@@ -3286,7 +3289,7 @@ footer {
     /* NAVIGATION MOBILE SCROLLABLE */
     .main-nav {
         overflow-x: auto !important;
-        overflow-y: hidden !important;
+        overflow-y: visible !important; /* Allow dropdown to show */
         white-space: nowrap !important;
         -webkit-overflow-scrolling: touch !important;
         scrollbar-width: thin !important;
@@ -3546,9 +3549,7 @@ footer {
 }
 
 .user-menu {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
+    position: fixed;
     min-width: 200px;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
@@ -3559,7 +3560,7 @@ footer {
     visibility: hidden;
     transform: translateY(-8px);
     transition: all 0.2s ease;
-    z-index: 9999;
+    z-index: 2147483647; /* Maximum z-index value */
     overflow: hidden;
     pointer-events: none;
 }
@@ -3627,21 +3628,13 @@ footer {
     align-items: center;
 }
 
-/* Assurer que les containers de header permettent l'affichage du menu */
-.header-buttons,
-.header-auth-container,
-.user-avatar-wrapper {
-    overflow: visible !important;
+/* Style pour le menu en mode portal */
+.user-menu.portal-dropdown {
+    position: fixed !important;
+    z-index: 2147483647 !important; /* Maximum z-index */
 }
 
-/* Forcer le header à permettre les dropdowns */
-header {
-    overflow: visible;
-}
-
-.header-top {
-    overflow: visible;
-}
+/* Le système portal rend ces règles inutiles */
 
 /* Responsive adjustments */
 @media (max-width: 768px) {

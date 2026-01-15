@@ -3559,8 +3559,16 @@ footer {
     visibility: hidden;
     transform: translateY(-8px);
     transition: all 0.2s ease;
-    z-index: 1000;
+    z-index: 9999;
     overflow: hidden;
+    pointer-events: none;
+}
+
+.user-menu--open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
 }
 
 .user-menu--open {
@@ -3617,6 +3625,22 @@ footer {
 .header-auth-area {
     display: flex;
     align-items: center;
+}
+
+/* Assurer que les containers de header permettent l'affichage du menu */
+.header-buttons,
+.header-auth-container,
+.user-avatar-wrapper {
+    overflow: visible !important;
+}
+
+/* Forcer le header à permettre les dropdowns */
+header {
+    overflow: visible;
+}
+
+.header-top {
+    overflow: visible;
 }
 
 /* Responsive adjustments */

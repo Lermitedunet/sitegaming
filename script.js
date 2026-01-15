@@ -22349,6 +22349,7 @@ function updateAuthUI(user) {
       display: flex;
       align-items: center;
       gap: var(--spacing-sm);
+      position: relative;
     `;
 
     // Bouton Admin uniquement pour les admins
@@ -22375,10 +22376,13 @@ function updateAuthUI(user) {
       }
     });
 
-    // Assembler avatar + menu
+    // Assembler avatar + menu dans un wrapper positionné
     const avatarWrapper = document.createElement('div');
     avatarWrapper.className = 'user-avatar-wrapper';
-    avatarWrapper.style.position = 'relative';
+    avatarWrapper.style.cssText = `
+      position: relative;
+      z-index: 50;
+    `;
     avatarWrapper.appendChild(avatar);
     avatarWrapper.appendChild(menu);
 

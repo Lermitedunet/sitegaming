@@ -22371,12 +22371,79 @@ function handleUserLogout() {
 }
 
 /**
+ * CRÉE OU RÉCUPÈRE LE CONTENEUR D'AUTHENTIFICATION DANS LE HEADER
+ */
+function getOrCreateAuthHost() {
+  // Essayer de trouver le conteneur existant
+  let host = document.getElementById("headerAuthButtons");
+
+  if (host) {
+    return host;
+  }
+
+  // Si pas trouvé, essayer de le créer dans .header-top ou header
+  const headerTop = document.querySelector('.header-top');
+  if (headerTop) {
+    // Créer le conteneur et l'insérer avant le burger menu
+    host = document.createElement('div');
+    host.id = 'headerAuthButtons';
+    host.className = 'header-buttons';
+
+    const burgerMenu = headerTop.querySelector('.nav-burger, .nav-toggle');
+    if (burgerMenu) {
+      headerTop.insertBefore(host, burgerMenu);
+    } else {
+      headerTop.appendChild(host);
+    }
+
+    return host;
+  }
+
+  // Fallback: créer dans header
+  const header = document.querySelector('header');
+  if (header) {
+    host = document.createElement('div');
+    host.id = 'headerAuthButtons';
+    host.className = 'header-buttons';
+    host.style.cssText = `
+      position: absolute;
+      top: 50%;
+      right: 40px;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    `;
+    header.appendChild(host);
+    return host;
+  }
+
+  // Dernier fallback: créer en haut à droite du body
+  host = document.createElement('div');
+  host.id = 'headerAuthButtons';
+  host.className = 'header-buttons';
+  host.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+  `;
+  document.body.appendChild(host);
+
+  console.warn('[AUTH] Conteneur auth créé en fallback dans body');
+  return host;
+}
+
+/**
  * MISE À JOUR DE L'UI APRÈS RÉSOLUTION AUTH
  */
 function updateAuthUI(user) {
   if (!authResolved) return;
 
-  const authButtonsContainer = document.getElementById("headerAuthButtons");
+  const authButtonsContainer = getOrCreateAuthHost();
   if (!authButtonsContainer) return;
 
   // Gestion de la visibilité des boutons statiques login/signup
@@ -22564,7 +22631,7 @@ async function initAuthRoutingAndUI() {
 
   if (!fb) {
     // Fallback UI pour utilisateurs non connectés
-    const authButtonsContainer = document.getElementById("headerAuthButtons");
+    const authButtonsContainer = getOrCreateAuthHost();
     if (authButtonsContainer) {
       authButtonsContainer.innerHTML = `
         <a href="login.html" class="btn btn-outline" style="font-size: 0.875em;">Se connecter</a>

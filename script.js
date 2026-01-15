@@ -22122,6 +22122,206 @@ function handleAuthRedirects(user) {
 }
 
 /**
+ * CRÉE UN COMPOSANT AVATAR CLIQUABLE AVEC INITIALE
+ */
+function createUserAvatar(user) {
+  // Déterminer l'initiale (priorité: pseudo/displayName > email[0])
+  let initial = '?';
+  if (user.displayName && user.displayName.trim()) {
+    initial = user.displayName.trim()[0].toUpperCase();
+  } else if (user.email) {
+    initial = user.email[0].toUpperCase();
+  }
+
+  const avatar = document.createElement('div');
+  avatar.className = 'user-avatar';
+  avatar.setAttribute('role', 'button');
+  avatar.setAttribute('tabindex', '0');
+  avatar.setAttribute('aria-label', 'Menu utilisateur');
+  avatar.innerHTML = `<span class="user-avatar__initial">${initial}</span>`;
+
+  return avatar;
+}
+
+/**
+ * CRÉE LE MENU DROPDOWN UTILISATEUR
+ */
+function createUserMenu(user) {
+  const menu = document.createElement('div');
+  menu.className = 'user-menu';
+  menu.setAttribute('role', 'menu');
+  menu.innerHTML = `
+    <button class="user-menu__item" data-action="profile" role="menuitem">
+      <span class="user-menu__icon">👤</span>
+      Modifier le profil
+    </button>
+    <button class="user-menu__item" data-action="settings" role="menuitem">
+      <span class="user-menu__icon">⚙️</span>
+      Paramètres
+    </button>
+    <div class="user-menu__separator"></div>
+    <button class="user-menu__item user-menu__item--danger" data-action="logout" role="menuitem">
+      <span class="user-menu__icon">🚪</span>
+      Se déconnecter
+    </button>
+  `;
+
+  return menu;
+}
+
+/**
+ * GÈRE L'OUVERTURE/FERMETURE DU MENU UTILISATEUR
+ */
+function toggleUserMenu(avatar, menu, user) {
+  const isOpen = menu.classList.contains('user-menu--open');
+
+  if (isOpen) {
+    closeUserMenu(menu);
+  } else {
+    openUserMenu(avatar, menu, user);
+  }
+}
+
+function openUserMenu(avatar, menu, user) {
+  // Fermer tous les autres menus ouverts
+  document.querySelectorAll('.user-menu--open').forEach(openMenu => {
+    if (openMenu !== menu) {
+      openMenu.classList.remove('user-menu--open');
+    }
+  });
+
+  menu.classList.add('user-menu--open');
+  avatar.setAttribute('aria-expanded', 'true');
+
+  // Focus sur le premier élément
+  const firstItem = menu.querySelector('[role="menuitem"]');
+  if (firstItem) firstItem.focus();
+
+  // Gestion des événements du menu
+  setupMenuEvents(menu, avatar, user);
+}
+
+function closeUserMenu(menu) {
+  menu.classList.remove('user-menu--open');
+  const avatar = menu.previousElementSibling;
+  if (avatar) {
+    avatar.setAttribute('aria-expanded', 'false');
+    avatar.focus();
+  }
+
+  // Nettoyer les événements
+  cleanupMenuEvents(menu);
+}
+
+function setupMenuEvents(menu, avatar, user) {
+  // Gestion des clics sur les items du menu
+  menu.addEventListener('click', (e) => {
+    const action = e.target.closest('[data-action]')?.getAttribute('data-action');
+    if (!action) return;
+
+    switch (action) {
+      case 'profile':
+        e.preventDefault();
+        alert('Fonctionnalité "Modifier le profil" bientôt disponible');
+        closeUserMenu(menu);
+        break;
+      case 'settings':
+        e.preventDefault();
+        alert('Fonctionnalité "Paramètres" bientôt disponible');
+        closeUserMenu(menu);
+        break;
+      case 'logout':
+        e.preventDefault();
+        handleUserLogout();
+        closeUserMenu(menu);
+        break;
+    }
+  });
+
+  // Fermeture au clic extérieur
+  const handleOutsideClick = (e) => {
+    if (!menu.contains(e.target) && !avatar.contains(e.target)) {
+      closeUserMenu(menu);
+    }
+  };
+
+  // Fermeture avec Escape
+  const handleEscape = (e) => {
+    if (e.key === 'Escape') {
+      closeUserMenu(menu);
+    }
+  };
+
+  // Fermeture avec Tab (sortie du menu)
+  const handleTab = (e) => {
+    if (e.key === 'Tab') {
+      const menuItems = menu.querySelectorAll('[role="menuitem"]');
+      const firstItem = menuItems[0];
+      const lastItem = menuItems[menuItems.length - 1];
+
+      if (e.shiftKey) {
+        // Shift+Tab sur le premier item → fermer
+        if (document.activeElement === firstItem) {
+          e.preventDefault();
+          closeUserMenu(menu);
+        }
+      } else {
+        // Tab sur le dernier item → fermer
+        if (document.activeElement === lastItem) {
+          e.preventDefault();
+          closeUserMenu(menu);
+        }
+      }
+    }
+  };
+
+  // Stocker les références pour cleanup
+  menu._outsideClickHandler = handleOutsideClick;
+  menu._escapeHandler = handleEscape;
+  menu._tabHandler = handleTab;
+
+  document.addEventListener('click', handleOutsideClick);
+  document.addEventListener('keydown', handleEscape);
+  document.addEventListener('keydown', handleTab);
+}
+
+function cleanupMenuEvents(menu) {
+  if (menu._outsideClickHandler) {
+    document.removeEventListener('click', menu._outsideClickHandler);
+  }
+  if (menu._escapeHandler) {
+    document.removeEventListener('keydown', menu._escapeHandler);
+  }
+  if (menu._tabHandler) {
+    document.removeEventListener('keydown', menu._tabHandler);
+  }
+}
+
+/**
+ * GÈRE LA DÉCONNEXION UTILISATEUR (RÉUTILISE LA LOGIQUE EXISTANTE)
+ */
+function handleUserLogout() {
+  const fb = window.fb;
+  if (fb && fb.signOut) {
+    fb.signOut(fb.auth)
+      .then(() => {
+        console.log("[AUTH] Déconnexion réussie");
+        // Nettoyer l'état et forcer redirection login
+        authResolved = false;
+        currentUser = null;
+        window.location.href = "login.html";
+      })
+      .catch((error) => {
+        console.error("[AUTH] Erreur lors de la déconnexion:", error);
+        // Fallback en cas d'erreur
+        authResolved = false;
+        currentUser = null;
+        window.location.reload();
+      });
+  }
+}
+
+/**
  * MISE À JOUR DE L'UI APRÈS RÉSOLUTION AUTH
  */
 function updateAuthUI(user) {
@@ -22134,105 +22334,62 @@ function updateAuthUI(user) {
   const loginButtons = document.querySelectorAll('a[href="login.html"]');
   const signupButtons = document.querySelectorAll('a[href="signup.html"]');
 
+  // Nettoyer tout contenu existant
+  authButtonsContainer.innerHTML = '';
+
   if (user) {
     // Utilisateur connecté - cacher les boutons login/signup
     loginButtons.forEach(btn => btn.style.display = 'none');
     signupButtons.forEach(btn => btn.style.display = 'none');
 
-    // Bouton Admin uniquement pour les admins (RÈGLE 5)
-    const isAdmin = isAllowedAdmin(user.email);
-    const adminButton = isAdmin ? `<a href="admin.html" class="btn btn-outline" style="font-size: 0.875em; margin-right: var(--spacing-sm);">Admin</a>` : '';
-
-    authButtonsContainer.innerHTML = `
-      ${adminButton}
-      <span style="color: var(--color-text-secondary); font-size: 0.875em; margin-right: var(--spacing-sm);">${escapeHtml(user.email)}</span>
-      <button type="button" class="btn btn-secondary" id="btn-logout" style="font-size: 0.875em;">Se déconnecter</button>
+    // Créer le conteneur flex pour aligner Admin + Avatar
+    const authContainer = document.createElement('div');
+    authContainer.className = 'header-auth-container';
+    authContainer.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
     `;
 
-    // Gestion du logout (RÈGLE 7)
-    const logoutBtn = document.getElementById("btn-logout");
-    if (logoutBtn) {
-      logoutBtn.addEventListener("click", function () {
-        const fb = window.fb;
-        if (fb && fb.signOut) {
-          fb.signOut(fb.auth)
-            .then(() => {
-              console.log("[AUTH] Déconnexion réussie");
-              // Nettoyer l'état et forcer redirection login
-              authResolved = false;
-              currentUser = null;
-              window.location.href = "login.html";
-            })
-            .catch((error) => {
-              console.error("[AUTH] Erreur lors de la déconnexion:", error);
-              // Fallback en cas d'erreur
-              authResolved = false;
-              currentUser = null;
-              window.location.reload();
-            });
-        }
-      });
+    // Bouton Admin uniquement pour les admins
+    const isAdmin = isAllowedAdmin(user.email);
+    if (isAdmin) {
+      const adminButton = document.createElement('a');
+      adminButton.href = 'admin.html';
+      adminButton.className = 'btn btn-outline';
+      adminButton.style.cssText = 'font-size: 0.875em;';
+      adminButton.textContent = 'Admin';
+      authContainer.appendChild(adminButton);
     }
 
-    // Bouton de logout sur admin.html
-    const isAdminPage = location.pathname.includes("admin.html");
-    if (isAdminPage) {
-      let adminLogoutBtn = document.getElementById("admin-logout-btn");
-      if (!adminLogoutBtn) {
-        const header = document.querySelector("header") || document.body;
-        const logoutContainer = document.createElement("div");
-        logoutContainer.style.cssText = `
-          position: fixed;
-          top: 10px;
-          right: 10px;
-          z-index: 1000;
-          background: rgba(0,0,0,0.8);
-          padding: 8px 12px;
-          border-radius: 4px;
-          font-size: 0.875em;
-        `;
-        logoutContainer.innerHTML = `
-          <span style="color: white; margin-right: 8px;">${escapeHtml(user.email)}</span>
-          <button id="admin-logout-btn" style="
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 0.8em;
-          ">Déconnexion</button>
-        `;
-        header.appendChild(logoutContainer);
-        adminLogoutBtn = document.getElementById("admin-logout-btn");
-      }
+    // Créer l'avatar et le menu
+    const avatar = createUserAvatar(user);
+    const menu = createUserMenu(user);
 
-      if (adminLogoutBtn) {
-        adminLogoutBtn.addEventListener("click", function () {
-          const fb = window.fb;
-          if (fb && fb.signOut) {
-            fb.signOut(fb.auth)
-              .then(() => {
-                authResolved = false;
-                currentUser = null;
-                window.location.href = "login.html";
-              })
-              .catch((error) => {
-                authResolved = false;
-                currentUser = null;
-                window.location.reload();
-              });
-          }
-        });
+    // Gestionnaire de clic sur l'avatar
+    avatar.addEventListener('click', () => toggleUserMenu(avatar, menu, user));
+    avatar.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleUserMenu(avatar, menu, user);
       }
-    }
+    });
+
+    // Assembler avatar + menu
+    const avatarWrapper = document.createElement('div');
+    avatarWrapper.className = 'user-avatar-wrapper';
+    avatarWrapper.style.position = 'relative';
+    avatarWrapper.appendChild(avatar);
+    avatarWrapper.appendChild(menu);
+
+    authContainer.appendChild(avatarWrapper);
+    authButtonsContainer.appendChild(authContainer);
 
   } else {
     // Utilisateur non connecté - afficher les boutons login/signup
     loginButtons.forEach(btn => btn.style.display = 'inline-flex');
     signupButtons.forEach(btn => btn.style.display = 'inline-flex');
 
-    // Utilisateur non connecté (déjà géré par le HTML)
     authButtonsContainer.innerHTML = `
       <a href="login.html" class="btn btn-outline" style="font-size: 0.875em;">Se connecter</a>
       <a href="signup.html" class="btn btn-primary" style="font-size: 0.875em;">S'inscrire</a>

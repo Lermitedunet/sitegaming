@@ -18697,73 +18697,8 @@ if (document.readyState === "loading") {
 // RENDU DYNAMIQUE DE LA PAGE ARTICLE
 // ============================================
 
-function renderArticlePage() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const slug = urlParams.get('slug');
-  const id = urlParams.get('id');
-
-  const articles = getArticlesData();
-  let article = null;
-
-  // Chercher par slug en priorité
-  if (slug) {
-    article = articles.find(a => a.slug === slug);
-  }
-  // Sinon chercher par id
-  else if (id) {
-    article = articles.find(a => a.id === id);
-  }
-
-  const articlePage = document.getElementById('article-page');
-  if (!articlePage) return;
-
-  if (!article) {
-    // Article non trouvé
-    articlePage.innerHTML = `
-      <div class="article-not-found">
-        <h1>Article introuvable</h1>
-        <p>Cet article n'existe pas ou a été supprimé.</p>
-        <a href="actu.html" class="btn btn-primary">Voir tous les articles</a>
-      </div>
-    `;
-    return;
-  }
-
-  // Si trouvé par id et que l'article a un slug, canonicaliser l'URL
-  if (id && article.slug && !slug) {
-    const newUrl = `${window.location.pathname}?slug=${encodeURIComponent(article.slug)}`;
-    history.replaceState(null, '', newUrl);
-  }
-
-  // Rendre l'article
-  const articleHtml = `
-    <article class="article-content">
-      <header class="article-header">
-        <h1 class="article-title">${escapeHtml(article.title)}</h1>
-        <div class="article-meta">
-          <time datetime="${article.date}">${formatDate(article.date)}</time>
-          ${article.author ? `<span class="article-author">Par ${escapeHtml(article.author)}</span>` : ''}
-        </div>
-      </header>
-
-      ${article.image ? `
-        <figure class="article-image">
-          <img src="${escapeHtml(article.image)}" alt="${escapeHtml(article.title)}" loading="lazy">
-        </figure>
-      ` : ''}
-
-      <div class="article-body">
-        ${article.content || '<p>Contenu à venir...</p>'}
-      </div>
-
-      <footer class="article-footer">
-        <a href="actu.html" class="btn btn-secondary">← Retour aux articles</a>
-      </footer>
-    </article>
-  `;
-
-  articlePage.innerHTML = articleHtml;
-}
+// Fonction renderArticlePage() obsolète supprimée
+// Utilisez la version ci-dessus (ligne ~15952) qui gère correctement contentBlocks
 
 // ============================================
 // RENDU DYNAMIQUE DE LA PAGE JEU

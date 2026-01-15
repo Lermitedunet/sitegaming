@@ -1230,7 +1230,23 @@ header::after {
     text-align: center;
 }
 
-/* Conteneur des boutons header - layout stable */
+/* Zone header droite - layout flex stable */
+.header-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    flex-wrap: nowrap;
+    min-width: 0;
+}
+
+/* Zone du header contenant #headerAuthButtons + bouton Admin */
+.header-top {
+    position: relative;
+    overflow: visible;
+}
+
+/* Conteneur de droite du header - flex row stable */
 .header-buttons {
     display: flex;
     align-items: center;
@@ -1239,7 +1255,7 @@ header::after {
     min-width: 0;
 }
 
-/* Positionnement absolu pour desktop */
+/* Positionnement desktop pour .header-buttons */
 .header-top .header-buttons {
     position: absolute;
     top: 50%;
@@ -1247,22 +1263,26 @@ header::after {
     transform: translateY(-50%);
 }
 
-/* S'assurer que #headerAuthButtons (conteneur dynamique) suit les mêmes règles */
+/* Forcer #headerAuthButtons à être flex stable */
 #headerAuthButtons {
-    display: flex !important;
-    align-items: center !important;
-    gap: 10px !important;
-    flex-wrap: nowrap !important;
-    min-width: 0 !important;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+    min-width: 0;
 }
 
-/* Interdire tout position absolute sur les boutons individuels */
+/* Empêcher les boutons de se superposer */
 .header-buttons .btn,
 #headerAuthButtons .btn,
 .header-buttons .user-avatar,
-#headerAuthButtons .user-avatar {
+#headerAuthButtons .user-avatar,
+.header-buttons .user-menu,
+#headerAuthButtons .user-menu {
     position: static !important;
     margin-left: 0 !important;
+    margin-right: 0 !important;
+    flex-shrink: 0;
 }
 
 .home-icon {

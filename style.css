@@ -1285,6 +1285,56 @@ header::after {
     flex-shrink: 0;
 }
 
+/* FIX CHEVAUCHEMENT HEADER: Gestion des boutons statiques vs dynamiques */
+
+/* Quand #headerAuthButtons (dynamique) est présent, cacher les boutons statiques */
+.header-top:has(#headerAuthButtons) .header-buttons:not(#headerAuthButtons) {
+    display: none !important;
+}
+
+/* Quand #headerAuthButtons n'est pas présent, afficher les boutons statiques */
+.header-top:not(:has(#headerAuthButtons)) .header-buttons {
+    display: flex !important;
+}
+
+/* Assurer que #headerAuthButtons est toujours visible quand présent */
+#headerAuthButtons {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex-wrap: nowrap !important;
+    min-width: 0 !important;
+}
+
+/* Forcer position statique pour éviter les chevauchements */
+.header-top .header-buttons,
+.header-top #headerAuthButtons {
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    transform: none !important;
+}
+
+/* Layout flex stable pour .header-top */
+.header-top {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    position: relative !important;
+    overflow: visible !important;
+}
+
+/* Organisation des éléments dans .header-top */
+.header-content {
+    flex: 1;
+    text-align: center;
+}
+
+.nav-burger,
+.nav-toggle {
+    margin-left: auto;
+}
+
 .home-icon {
     position: absolute;
     top: 18px;

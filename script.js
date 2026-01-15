@@ -7238,9 +7238,10 @@ function renderGames(games, containerId = "gamesGrid", options = {}) {
     }
 
     // Rendre le HTML de la carte
+    const gameUrl = getGameUrl(game);
     return `
             <div class="game-card" data-console="${consoleAttr}" data-genre="${genreAttr}" data-game-id="${safeId}">
-                <a href="jeu.html?id=${safeId}" class="game-link">
+                <a href="${gameUrl}" class="game-link">
                     <div class="game-image">
                         ${imageHtml}
                     </div>
@@ -14216,6 +14217,65 @@ function getArticleUrl(article) {
 }
 
 /**
+ * Garantit l'unicité d'un slug pour les jeux
+ * @param {Array} games - Liste des jeux
+ * @param {string} desiredSlug - Slug désiré
+ * @param {string} currentId - ID du jeu actuel (pour exclure de la vérification)
+ * @returns {string} - Slug unique
+ */
+function ensureUniqueSlugForGames(games, desiredSlug, currentId) {
+  try {
+    const base = slugify(desiredSlug || "");
+    if (!base) return "";
+
+    if (!Array.isArray(games)) return base;
+
+    // Vérifier conflits : conflit si g.slug === candidate ET g.id !== currentId
+    let candidate = base;
+    let counter = 2;
+
+    while (
+      games.some(
+        (g) => g.slug === candidate && String(g.id) !== String(currentId),
+      )
+    ) {
+      candidate = `${base}-${counter}`;
+      counter++;
+    }
+    return candidate;
+  } catch (e) {
+    console.error("Erreur lors de la génération du slug unique pour jeu:", e);
+    return slugify(desiredSlug || "") || "jeu";
+  }
+}
+
+/**
+ * Génère l'URL appropriée pour un jeu (slug en priorité, fallback id)
+ * @param {Object} game - Objet jeu
+ * @returns {string} - URL du jeu
+ */
+function getGameUrl(game) {
+  if (!game) return "jeu.html";
+
+  try {
+    const slug = toText(game.slug || "");
+    if (slug) {
+      return `jeu.html?slug=${encodeURIComponent(slug)}`;
+    }
+
+    const id = toText(game.id || "");
+    if (id) {
+      return `jeu.html?id=${encodeURIComponent(id)}`;
+    }
+
+    return "jeu.html";
+  } catch (e) {
+    console.error("Erreur lors de la génération de l'URL du jeu:", e);
+    return "jeu.html";
+  }
+}
+
+/**
  * ADDED: Récupère un article par son slug
  * @param {string} slug - Slug de l'article
  * @returns {Object|null} - Article ou null si non trouvé
@@ -14232,6 +14292,30 @@ function getArticleBySlug(slug) {
       articles.find((a) => {
         const articleSlug = toText(a.slug || "");
         return articleSlug === normalizedSlug;
+      }) || null
+    );
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Recherche un jeu par son slug
+ * @param {string} slug - Slug du jeu à rechercher
+ * @returns {Object|null} - Jeu trouvé ou null
+ */
+function getGameBySlug(slug) {
+  if (!slug || typeof slug !== "string") return null;
+
+  try {
+    const normalizedSlug = slugify(slug);
+    if (!normalizedSlug) return null;
+
+    const games = getGamesData();
+    return (
+      games.find((g) => {
+        const gameSlug = toText(g.slug || "");
+        return gameSlug === normalizedSlug;
       }) || null
     );
   } catch (e) {
@@ -14405,6 +14489,7 @@ function closeGameModal() {
  */
 function fillForm(game) {
   document.getElementById("game-id").value = game.id || "";
+  document.getElementById("game-slug").value = toText(game.slug || "");
   document.getElementById("game-title").value = toText(game.title);
   document.getElementById("game-platforms").value = Array.isArray(
     game.platforms,
@@ -14448,6 +14533,7 @@ function fillForm(game) {
 function readForm() {
   const id = toText(document.getElementById("game-id").value);
   const title = toText(document.getElementById("game-title").value);
+  const slug = toText(document.getElementById("game-slug").value);
   const platformsStr = toText(document.getElementById("game-platforms").value);
   const genresStr = toText(document.getElementById("game-genres").value);
   const status = document.getElementById("game-status").value;
@@ -14485,6 +14571,7 @@ function readForm() {
 
   return {
     id,
+    slug,
     title,
     platforms,
     genres,
@@ -17410,9 +17497,15 @@ function createGame(payload) {
     return;
   }
 
+  // ADDED: Gérer le slug
+  let gameSlug = payload.slug ? slugify(payload.slug) : slugify(payload.title);
+  if (!gameSlug) gameSlug = baseSlug;
+  gameSlug = ensureUniqueSlugForGames(games, gameSlug, id);
+
   // ADDED: Créer l'objet jeu complet avec le modèle standardisé
   const newGame = normalizeGame({
     id,
+    slug: gameSlug,
     title: payload.title,
     platforms: payload.platforms || [],
     genres: payload.genres || [],
@@ -17462,10 +17555,16 @@ function updateGame(id, payload) {
   // Le slug peut être mis à jour si nécessaire, mais l'id reste stable
   const existingGame = games[index];
 
+  // ADDED: Gérer le slug en mode édition
+  let gameSlug = payload.slug ? slugify(payload.slug) : (existingGame.slug || slugify(payload.title));
+  if (!gameSlug) gameSlug = slugify(payload.title);
+  gameSlug = ensureUniqueSlugForGames(games, gameSlug, existingGame.id);
+
   // ADDED: Mettre à jour le jeu avec le modèle standardisé (id préservé)
   games[index] = normalizeGame({
     ...existingGame,
     id: existingGame.id, // ADDED: Garantir que l'id ne change jamais
+    slug: gameSlug,
     title: payload.title,
     platforms: payload.platforms || existingGame.platforms || [],
     genres: payload.genres || existingGame.genres || [],
@@ -18770,36 +18869,69 @@ function renderGamePage() {
   const gamePage = document.getElementById("game-page");
   if (!gamePage) return;
 
-  // ADDED: Lire les jeux depuis getGamesData() (pas d'accès direct à loadedGames)
-  const games = getGamesData();
-
-  // Lire l'ID depuis l'URL
-  const params = new URLSearchParams(window.location.search);
-  const gameId = params.get("id");
-
-  // Si pas d'ID ou jeu inconnu
-  if (!gameId) {
+  // Garde de sécurité : vérifier que les fonctions nécessaires existent
+  if (typeof getGameBySlug !== "function" || typeof getGamesData !== "function") {
+    console.error("[renderGamePage] Fonctions requises non disponibles");
     gamePage.innerHTML = `
-            <div class="game-not-found">
-                <h1>Jeu introuvable</h1>
-                <p>Le jeu demandé n'existe pas ou a été supprimé.</p>
-                <a href="index.html" class="btn btn-primary">Retour à l'accueil</a>
-            </div>
-        `;
+      <div class="game-not-found">
+        <h1>Erreur technique</h1>
+        <p>Impossible de charger le jeu.</p>
+        <a href="index.html" class="btn btn-primary">Retour à l'accueil</a>
+      </div>
+    `;
     return;
   }
 
-  // ADDED: Chercher le jeu dans games (depuis getGamesData())
-  const game = games.find((g) => g.id === gameId);
+  // Lire les paramètres d'URL de manière safe
+  const params = new URLSearchParams(window.location.search);
+  const gameSlug = params.get("slug");
+  const gameId = params.get("id");
+
+  // Si pas de paramètre
+  if (!gameSlug && !gameId) {
+    gamePage.innerHTML = `
+      <div class="game-not-found">
+        <h1>Jeu introuvable</h1>
+        <p>Aucun identifiant de jeu n'a été fourni.</p>
+        <a href="index.html" class="btn btn-primary">Retour à l'accueil</a>
+      </div>
+    `;
+    return;
+  }
+
+  // Recherche du jeu avec gestion d'erreur
+  let game = null;
+  try {
+    if (gameSlug) {
+      game = getGameBySlug(gameSlug);
+    }
+    if (!game && gameId) {
+      const games = getGamesData();
+      if (Array.isArray(games)) {
+        game = games.find((g) => String(g.id) === String(gameId));
+        // Si trouvé via id et que le jeu a un slug, normaliser l'URL
+        if (game && game.slug && window.history && window.history.replaceState) {
+          const newUrl = `jeu.html?slug=${encodeURIComponent(game.slug)}`;
+          window.history.replaceState(null, "", newUrl);
+        }
+      }
+    }
+  } catch (error) {
+    console.error("[renderGamePage] Erreur lors de la recherche du jeu:", error);
+  }
 
   if (!game) {
+    // État jeu non trouvé
+    if (typeof document !== "undefined" && document.title) {
+      document.title = "Jeu introuvable – LE MONT DE LERMITE";
+    }
     gamePage.innerHTML = `
-            <div class="game-not-found">
-                <h1>Jeu introuvable</h1>
-                <p>Le jeu demandé n'existe pas ou a été supprimé.</p>
-                <a href="index.html" class="btn btn-primary">Retour à l'accueil</a>
-            </div>
-        `;
+      <div class="game-not-found">
+        <h1>Jeu introuvable</h1>
+        <p>Le jeu demandé n'existe pas ou a été supprimé.</p>
+        <a href="index.html" class="btn btn-primary">Retour à l'accueil</a>
+      </div>
+    `;
     return;
   }
 

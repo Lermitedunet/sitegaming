@@ -22171,109 +22171,14 @@ function createUserMenu(user) {
   return menu;
 }
 
-// Variable globale pour tracker le menu portal ouvert
-let currentPortalMenu = null;
+// Variable globale pour tracker le menu ouvert
+let currentUserMenu = null;
 
-// Fonction pour sauvegarder la position originale d'un élément
-function saveOriginalPosition(element) {
-  const originalParent = element.parentElement;
-  const originalNextSibling = element.nextElementSibling;
+// Fonctions de portal supprimées - on utilise maintenant position:absolute relative
 
-  // Sauvegarder les références
-  element._portal = {
-    originalParent,
-    originalNextSibling,
-    originalStyles: {
-      position: element.style.position,
-      top: element.style.top,
-      left: element.style.left,
-      zIndex: element.style.zIndex
-    }
-  };
+// Fonction getAbsolutePosition supprimée - plus nécessaire avec position:absolute relative
 
-  return element._portal;
-}
-
-// Fonction pour restaurer la position originale d'un élément
-function restoreOriginalPosition(element) {
-  if (!element._portal) return;
-
-  const { originalParent, originalNextSibling, originalStyles } = element._portal;
-
-  // Restaurer les styles originaux
-  Object.assign(element.style, originalStyles);
-
-  // Remettre à sa place originale
-  if (originalParent) {
-    if (originalNextSibling) {
-      originalParent.insertBefore(element, originalNextSibling);
-    } else {
-      originalParent.appendChild(element);
-    }
-  }
-
-  // Nettoyer les données sauvegardées
-  delete element._portal;
-}
-
-/**
- * CALCULE LA POSITION ABSOLUE D'UN ÉLÉMENT
- */
-function getAbsolutePosition(element) {
-  const rect = element.getBoundingClientRect();
-  const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-
-  return {
-    top: rect.top + scrollTop,
-    left: rect.left + scrollLeft,
-    width: rect.width,
-    height: rect.height,
-    right: rect.right + scrollLeft,
-    bottom: rect.bottom + scrollTop
-  };
-}
-
-/**
- * POSITIONNE LE MENU PORTAL AVEC CLAMP À L'ÉCRAN
- */
-function positionPortalMenu(menu, avatar) {
-  if (!menu || !avatar) return;
-
-  const avatarPos = getAbsolutePosition(avatar);
-  const menuRect = menu.getBoundingClientRect();
-  const viewportWidth = window.innerWidth;
-  const viewportHeight = window.innerHeight;
-
-  // Ajouter la classe portal si pas déjà présente
-  menu.classList.add('portal-dropdown');
-
-  // Position par défaut : en bas à droite de l'avatar
-  let top = avatarPos.bottom + 8;
-  let left = avatarPos.right - menuRect.width;
-
-  // Clamp à droite : si dépasse à droite, aligner à gauche de l'avatar
-  if (left + menuRect.width > viewportWidth - 16) {
-    left = avatarPos.left - menuRect.width;
-  }
-
-  // Clamp en bas : si dépasse en bas, positionner au-dessus de l'avatar
-  if (top + menuRect.height > viewportHeight - 16) {
-    top = avatarPos.top - menuRect.height - 8;
-  }
-
-  // Clamp à gauche : minimum 16px du bord
-  left = Math.max(16, left);
-
-  // Clamp en haut : minimum 16px du bord
-  top = Math.max(16, top);
-
-  // Appliquer les styles de positionnement
-  menu.style.position = 'fixed';
-  menu.style.top = `${top}px`;
-  menu.style.left = `${left}px`;
-  menu.style.zIndex = '2147483647';
-}
+// Fonction de positionnement supprimée - maintenant géré par CSS position:absolute
 
 /**
  * GÈRE L'OUVERTURE/FERMETURE DU MENU UTILISATEUR (VERSION PORTAL)
@@ -22289,27 +22194,15 @@ function toggleUserMenu(avatar, menu, user) {
 }
 
 function openUserMenu(avatar, menu, user) {
-  // Fermer tout menu portal existant
-  if (currentPortalMenu && currentPortalMenu !== menu) {
-    closeUserMenu(currentPortalMenu);
+  // Fermer tout menu ouvert existant
+  if (currentUserMenu && currentUserMenu !== menu) {
+    closeUserMenu(currentUserMenu);
   }
 
-  // Sauvegarder la position originale si pas déjà fait
-  if (!menu._portal) {
-    saveOriginalPosition(menu);
-  }
-
-  // Déplacer le menu dans le body (portal)
-  if (menu.parentElement !== document.body) {
-    document.body.appendChild(menu);
-  }
-
-  // Calculer et appliquer la position en portal
-  positionPortalMenu(menu, avatar);
-
+  // Le menu reste dans son wrapper parent avec position:absolute
   menu.classList.add('user-menu--open');
   avatar.setAttribute('aria-expanded', 'true');
-  currentPortalMenu = menu;
+  currentUserMenu = menu;
 
   // Focus sur le premier élément
   const firstItem = menu.querySelector('[role="menuitem"]');
@@ -22322,7 +22215,7 @@ function openUserMenu(avatar, menu, user) {
 function closeUserMenu(menu) {
   if (!menu) return;
 
-  menu.classList.remove('user-menu--open', 'portal-dropdown');
+  menu.classList.remove('user-menu--open');
 
   // Remettre l'aria-expanded à false sur l'avatar associé
   const avatar = document.querySelector('.user-avatar[aria-expanded="true"]');
@@ -22331,11 +22224,8 @@ function closeUserMenu(menu) {
     avatar.focus();
   }
 
-  // Restaurer la position originale du menu
-  restoreOriginalPosition(menu);
-
-  if (currentPortalMenu === menu) {
-    currentPortalMenu = null;
+  if (currentUserMenu === menu) {
+    currentUserMenu = null;
   }
 
   // Nettoyer les événements
@@ -22381,13 +22271,6 @@ function setupMenuEvents(menu, avatar, user) {
     }
   };
 
-  // Repositionnement au resize/scroll
-  const handleReposition = () => {
-    if (menu.classList.contains('user-menu--open')) {
-      positionPortalMenu(menu, avatar);
-    }
-  };
-
   // Fermeture avec Tab (sortie du menu)
   const handleTab = (e) => {
     if (e.key === 'Tab') {
@@ -22415,15 +22298,12 @@ function setupMenuEvents(menu, avatar, user) {
   menu._menuClickHandler = handleMenuClick;
   menu._outsideClickHandler = handleOutsideClick;
   menu._escapeHandler = handleEscape;
-  menu._repositionHandler = handleReposition;
   menu._tabHandler = handleTab;
 
   menu.addEventListener('click', handleMenuClick);
   document.addEventListener('click', handleOutsideClick);
   document.addEventListener('keydown', handleEscape);
   document.addEventListener('keydown', handleTab);
-  window.addEventListener('resize', handleReposition);
-  window.addEventListener('scroll', handleReposition, { passive: true });
 }
 
 function cleanupMenuEvents(menu) {
@@ -22435,10 +22315,6 @@ function cleanupMenuEvents(menu) {
   }
   if (menu._escapeHandler) {
     document.removeEventListener('keydown', menu._escapeHandler);
-  }
-  if (menu._repositionHandler) {
-    window.removeEventListener('resize', menu._repositionHandler);
-    window.removeEventListener('scroll', menu._repositionHandler);
   }
   if (menu._tabHandler) {
     document.removeEventListener('keydown', menu._tabHandler);
@@ -22490,14 +22366,14 @@ function updateAuthUI(user) {
     loginButtons.forEach(btn => btn.style.display = 'none');
     signupButtons.forEach(btn => btn.style.display = 'none');
 
-    // Créer le conteneur flex pour aligner Admin + Avatar
-    const authContainer = document.createElement('div');
-    authContainer.className = 'header-auth-container';
-    authContainer.style.cssText = `
+    // Créer un conteneur interne avec position relative pour le dropdown
+    const authInnerContainer = document.createElement('div');
+    authInnerContainer.className = 'header-auth-inner';
+    authInnerContainer.style.cssText = `
+      position: relative;
       display: flex;
       align-items: center;
       gap: var(--spacing-sm);
-      position: relative;
     `;
 
     // Bouton Admin uniquement pour les admins
@@ -22508,13 +22384,13 @@ function updateAuthUI(user) {
       adminButton.className = 'btn btn-outline';
       adminButton.style.cssText = 'font-size: 0.875em;';
       adminButton.textContent = 'Admin';
-      authContainer.appendChild(adminButton);
+      authInnerContainer.appendChild(adminButton);
     }
 
     // Créer l'avatar
     const avatar = createUserAvatar(user);
 
-    // Créer le menu (sera géré par le système portal)
+    // Créer le menu (position absolute par rapport au conteneur)
     const menu = createUserMenu(user);
 
     // Gestionnaire de clic sur l'avatar
@@ -22526,13 +22402,17 @@ function updateAuthUI(user) {
       }
     });
 
-    // Wrapper simple pour l'avatar
+    // Wrapper pour l'avatar avec position relative
     const avatarWrapper = document.createElement('div');
     avatarWrapper.className = 'user-avatar-wrapper';
+    avatarWrapper.style.cssText = `
+      position: relative;
+    `;
     avatarWrapper.appendChild(avatar);
+    avatarWrapper.appendChild(menu); // Menu reste dans le wrapper pour position:absolute
 
-    authContainer.appendChild(avatarWrapper);
-    authButtonsContainer.appendChild(authContainer);
+    authInnerContainer.appendChild(avatarWrapper);
+    authButtonsContainer.appendChild(authInnerContainer);
 
   } else {
     // Utilisateur non connecté - afficher les boutons login/signup

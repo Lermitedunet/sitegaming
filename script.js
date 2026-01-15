@@ -16020,6 +16020,13 @@ function renderArticlePage() {
     return;
   }
 
+  // Tout en haut de la fonction, après avoir validé que article existe, définir contentBlocks localement
+  const contentBlocks =
+    Array.isArray(article.contentBlocks) ? article.contentBlocks :
+    Array.isArray(article.blocks) ? article.blocks :
+    Array.isArray(article.content) ? article.content :
+    [];
+
   // Construire le HTML de la page article de manière robuste
   const title = (typeof toText === "function" ? toText(article.title) : article.title) || "Sans titre";
   const excerpt = (typeof toText === "function" ? toText(article.excerpt) : article.excerpt) || "";
@@ -16039,20 +16046,34 @@ function renderArticlePage() {
       document.head.appendChild(metaDesc);
     }
 
-    // Description depuis excerpt ou titre
-    let descriptionText = excerpt || title || "";
+    // Génération robuste de meta description:
+    // 1) Si excerpt/summary existe -> utiliser ça
+    let descriptionText = excerpt || article.summary || "";
+
+    // 2) Sinon, si contentBlocks contient un bloc type "text" avec .text -> utiliser ça
+    if (!descriptionText && contentBlocks && Array.isArray(contentBlocks) && contentBlocks.length > 0) {
+      const firstTextBlock = contentBlocks.find(
+        (block) => block && block.type === "text" && block.text
+      );
+      if (firstTextBlock) {
+        descriptionText = (typeof toText === "function" ? toText(firstTextBlock.text) : firstTextBlock.text) || "";
+        descriptionText = descriptionText.substring(0, 160); // Limiter à 160 caractères pour SEO
+      }
+    }
+
+    // 3) Sinon fallback -> title
+    if (!descriptionText) {
+      descriptionText = title;
+    }
+
     if (descriptionText.length > 160) {
       descriptionText = descriptionText.substring(0, 157) + "...";
     }
     metaDesc.setAttribute("content", descriptionText);
   }
 
-  // Extraction des blocs de contenu de manière robuste
-  const blocks =
-    Array.isArray(article.contentBlocks) ? article.contentBlocks :
-    Array.isArray(article.blocks) ? article.blocks :
-    Array.isArray(article.content) ? article.content :
-    null;
+  // Extraction des blocs de contenu de manière robuste (utilise maintenant contentBlocks local)
+  const blocks = contentBlocks;
 
   // Construction du contenu HTML
   let contentHtml = "";

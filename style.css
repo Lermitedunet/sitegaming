@@ -1221,6 +1221,8 @@ header::after {
     backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 2px 16px rgba(0, 0, 0, 0.1);
+    /* Assurer que les éléments absolus peuvent être positionnés correctement */
+    overflow: visible;
 }
 
 .header-content {
@@ -1228,14 +1230,39 @@ header::after {
     text-align: center;
 }
 
+/* Conteneur des boutons header - layout stable */
 .header-buttons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: nowrap;
+    min-width: 0;
+}
+
+/* Positionnement absolu pour desktop */
+.header-top .header-buttons {
     position: absolute;
     top: 50%;
     right: 40px;
     transform: translateY(-50%);
-    display: flex;
-    align-items: center;
-    gap: 12px;
+}
+
+/* S'assurer que #headerAuthButtons (conteneur dynamique) suit les mêmes règles */
+#headerAuthButtons {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex-wrap: nowrap !important;
+    min-width: 0 !important;
+}
+
+/* Interdire tout position absolute sur les boutons individuels */
+.header-buttons .btn,
+#headerAuthButtons .btn,
+.header-buttons .user-avatar,
+#headerAuthButtons .user-avatar {
+    position: static !important;
+    margin-left: 0 !important;
 }
 
 .home-icon {

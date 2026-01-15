@@ -21870,8 +21870,16 @@ function getNextUrl() {
 /**
  * ADDED: Gère la soumission du formulaire de connexion
  */
-function handleLoginSubmit(e) {
+async function handleLoginSubmit(e) {
   e.preventDefault();
+
+  // Attendre Firebase avant de procéder
+  const fb = await waitForFirebase(5, 50);
+  if (!fb) {
+    console.warn("[AUTH] Firebase indisponible pour login");
+    alert("Service d'authentification indisponible. Veuillez réessayer.");
+    return;
+  }
 
   const form = e.target;
   const identifier = toText(
@@ -21959,8 +21967,16 @@ function handleLoginSubmit(e) {
 /**
  * ADDED: Gère la soumission du formulaire d'inscription
  */
-function handleSignupSubmit(e) {
+async function handleSignupSubmit(e) {
   e.preventDefault();
+
+  // Attendre Firebase avant de procéder
+  const fb = await waitForFirebase(5, 50);
+  if (!fb) {
+    console.warn("[AUTH] Firebase indisponible pour signup");
+    alert("Service d'authentification indisponible. Veuillez réessayer.");
+    return;
+  }
 
   const form = e.target;
   const pseudo = toText(form.querySelector("#signup-pseudo").value).trim();
@@ -22325,24 +22341,33 @@ function cleanupMenuEvents(menu) {
  * GÈRE LA DÉCONNEXION UTILISATEUR (RÉUTILISE LA LOGIQUE EXISTANTE)
  */
 function handleUserLogout() {
-  const fb = window.fb;
-  if (fb && fb.signOut) {
-    fb.signOut(fb.auth)
-      .then(() => {
-        console.log("[AUTH] Déconnexion réussie");
-        // Nettoyer l'état et forcer redirection login
-        authResolved = false;
-        currentUser = null;
-        window.location.href = "login.html";
-      })
-      .catch((error) => {
-        console.error("[AUTH] Erreur lors de la déconnexion:", error);
-        // Fallback en cas d'erreur
-        authResolved = false;
-        currentUser = null;
-        window.location.reload();
-      });
-  }
+  waitForFirebase(5, 50) // Court délai pour logout
+    .then((fb) => {
+      if (fb && fb.signOut) {
+        fb.signOut(fb.auth)
+          .then(() => {
+            console.log("[AUTH] Déconnexion réussie");
+            // Nettoyer l'état et forcer redirection login
+            authResolved = false;
+            currentUser = null;
+            window.location.href = "login.html";
+          })
+          .catch((error) => {
+            console.error("[AUTH] Erreur lors de la déconnexion:", error);
+            // Fallback en cas d'erreur
+            authResolved = false;
+            currentUser = null;
+            window.location.reload();
+          });
+      }
+    })
+    .catch(() => {
+      console.warn("[AUTH] Firebase indisponible pour logout - fallback");
+      // Fallback sans Firebase
+      authResolved = false;
+      currentUser = null;
+      window.location.href = "login.html";
+    });
 }
 
 /**

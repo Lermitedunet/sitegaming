@@ -1517,6 +1517,13 @@ function renderTestsPage() {
 
   const tests = getTestsData();
 
+  // Rendre les tests
+  if (tests.length > 0) {
+    container.innerHTML = tests.map(test => renderTestItem(test)).join("");
+    // Appliquer fallbacks aux images après rendu
+    applyImageFallbacks(container);
+  } else {
+
   // Fonction pour rendre un test individuel (même structure que les articles)
   function renderTestItem(test) {
     const game = test.gameId
@@ -1573,7 +1580,7 @@ function renderTestsPage() {
       container.parentNode.insertBefore(pagerEl, container.nextSibling);
     }
 
-    return initGridPagination({
+    const pagination = initGridPagination({
       gridEl: container,
       pagerEl: pagerEl,
       items: tests,
@@ -1581,6 +1588,11 @@ function renderTestsPage() {
       renderItem: renderTestItem,
       key: "tests",
     });
+
+    // Appliquer fallbacks aux images après rendu initial
+    setTimeout(() => applyImageFallbacks(container), 100);
+
+    return pagination;
   } else {
     // Aucun test : afficher le message vide
     container.innerHTML = `
@@ -7281,6 +7293,9 @@ function renderGames(games, containerId = "gamesGrid", options = {}) {
 
   // Mettre à jour la référence gameCards pour les filtres
   gameCards = document.querySelectorAll(".game-card");
+
+  // Appliquer fallbacks aux images après rendu
+  setTimeout(() => applyImageFallbacks(container), 100);
 }
 
 // ============================================
@@ -17973,6 +17988,9 @@ function renderLatestArticlesSidebar({
             `;
       })
       .join("");
+
+    // Appliquer fallbacks aux images de fond CSS après rendu
+    setTimeout(() => applyImageFallbacks(container), 100);
   } catch (error) {
     console.error("[renderLatestArticlesSidebar] Error:", error);
     container.innerHTML =
@@ -18518,7 +18536,7 @@ function renderArticlesMosaic({ containerId, filterFn, title, subtitle }) {
         container.parentNode.insertBefore(pagerEl, container.nextSibling);
       }
 
-      return initGridPagination({
+      const pagination = initGridPagination({
         gridEl: container,
         pagerEl: pagerEl,
         items: sortedArticles,
@@ -18526,6 +18544,11 @@ function renderArticlesMosaic({ containerId, filterFn, title, subtitle }) {
         renderItem: renderArticleItem,
         key: `articles-${containerId}`, // Clé unique par section d'articles
       });
+
+      // Appliquer fallbacks aux images après rendu initial
+      setTimeout(() => applyImageFallbacks(container), 100);
+
+      return pagination;
     } else {
       // Aucun article : afficher le message vide
       container.innerHTML = `
@@ -18691,6 +18714,45 @@ if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initApp);
 } else {
   initApp();
+}
+
+// ============================================
+// FALLBACKS POUR IMAGES CASSÉES (404/REDIRECTS)
+// ============================================
+
+/**
+ * Applique des fallbacks automatiques aux images qui échouent (404/redirects)
+ * @param {Element} root - Élément racine à scanner (par défaut document)
+ */
+function applyImageFallbacks(root = document) {
+  // Data-uri SVG simple comme placeholder (évite de créer un fichier)
+  const placeholderSrc = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vbiBkaXNwb25pYmxlPC90ZXh0Pjwvc3ZnPg==";
+
+  // Trouver toutes les images dans les sections dynamiques
+  const images = root.querySelectorAll('img');
+
+  images.forEach(img => {
+    // Éviter de traiter plusieurs fois la même image
+    if (img.hasAttribute('data-fallback-applied')) return;
+
+    // Vérifier si l'image est dans une section dynamique (cartes, listes)
+    const isInDynamicSection = img.closest('.games-grid, .tests-grid, .guides-grid, .articles-grid, .card, .game-card, .test-card, .guide-card, .article-card');
+
+    if (isInDynamicSection) {
+      img.addEventListener('error', function() {
+        // Ne pas remplacer si c'est déjà le placeholder
+        if (img.src !== placeholderSrc) {
+          console.warn(`[Image Fallback] Image failed to load: ${img.src}`);
+          img.src = placeholderSrc;
+          img.classList.add('img-fallback');
+          img.alt = img.alt || 'Image non disponible';
+        }
+      }, { once: true });
+
+      // Marquer comme traité
+      img.setAttribute('data-fallback-applied', 'true');
+    }
+  });
 }
 
 // ============================================
@@ -21137,6 +21199,9 @@ function renderHomePromos() {
             `;
       document.head.appendChild(style);
     }
+
+    // Appliquer fallbacks aux images après rendu
+    setTimeout(() => applyImageFallbacks(grid), 100);
   } catch (e) {
     console.error("Erreur lors du rendu des promos:", e);
     grid.innerHTML =

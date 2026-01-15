@@ -22497,13 +22497,47 @@ function isAllowedAdmin(email) {
 }
 
 /**
+ * FONCTION ROBUSTE POUR ATTENDRE FIREBASE
+ * Retry jusqu'à 20 fois (2 secondes max) pour éviter les problèmes de timing
+ */
+let firebaseWarningLogged = false; // Flag pour éviter les logs répétés
+function waitForFirebase(maxRetries = 20, interval = 100) {
+  return new Promise((resolve) => {
+    let attempts = 0;
+
+    const checkFirebase = () => {
+      attempts++;
+      const fb = window.fb;
+
+      if (fb && typeof fb.onAuthStateChanged === "function") {
+        resolve(fb);
+        return;
+      }
+
+      if (attempts >= maxRetries) {
+        if (!firebaseWarningLogged) {
+          console.warn("[AUTH] Firebase indisponible après", maxRetries * interval, "ms - fallback UI activé");
+          firebaseWarningLogged = true;
+        }
+        resolve(null); // Fallback sans Firebase
+        return;
+      }
+
+      setTimeout(checkFirebase, interval);
+    };
+
+    checkFirebase();
+  });
+}
+
+/**
  * INITIALISATION CENTRALISÉE DE L'AUTHENTIFICATION
  * UN SEUL onAuthStateChanged pour éviter les conflits
  */
-function initAuthRoutingAndUI() {
-  const fb = window.fb;
-  if (!fb || typeof fb.onAuthStateChanged !== "function") {
-    console.warn("[AUTH] Firebase indisponible");
+async function initAuthRoutingAndUI() {
+  const fb = await waitForFirebase();
+
+  if (!fb) {
     // Fallback UI pour utilisateurs non connectés
     const authButtonsContainer = document.getElementById("headerAuthButtons");
     if (authButtonsContainer) {

@@ -1721,6 +1721,8 @@ function updateDebugPanel() {
   }
 }
 
+// Fonction renderArticleContent() obsolète supprimée
+
 /**
  * Bascule la visibilité du panneau debug
  */
@@ -7605,6 +7607,8 @@ function saveArticlesOverride(nextArticles) {
 /**
  * ADDED: Source de vérité unique pour les données d'articles (admin + pages publiques)
  */
+// Fonctions slugify, ensureUniqueSlug et getArticleUrl existent déjà dans le code
+
 function getArticlesData() {
   const override = getArticlesOverride();
   const articles = override || window.BASE_ARTICLES || [];
@@ -15946,169 +15950,203 @@ function getArticleBlocks(article) {
  * ADDED: Rend le contenu d'un article avec blocs sur les pages publiques
  */
 function renderArticlePage() {
+  // Garde de sécurité : vérifier que l'élément DOM existe
   const articlePage = document.getElementById("article-page");
   if (!articlePage) return;
 
-  // ADDED: Récupérer le slug ou l'ID depuis les query params (slug en priorité)
+  // Garde de sécurité : vérifier que les fonctions nécessaires existent
+  if (typeof getArticleBySlug !== "function" || typeof getArticlesData !== "function") {
+    console.error("[renderArticlePage] Fonctions requises non disponibles");
+    articlePage.innerHTML = `
+      <div style="max-width: 800px; margin: var(--spacing-xl) auto; padding: var(--spacing-xl); text-align: center;">
+        <h1 style="font-size: 2em; margin-bottom: var(--spacing-md); color: var(--color-text-primary);">Erreur technique</h1>
+        <p style="color: var(--color-text-secondary); margin-bottom: var(--spacing-lg);">Impossible de charger l'article.</p>
+        <a href="index.html" class="btn btn-primary">Retour à l'accueil</a>
+      </div>
+    `;
+    return;
+  }
+
+  // Récupérer les paramètres d'URL de manière safe
   const urlParams = new URLSearchParams(window.location.search);
   const articleSlug = urlParams.get("slug");
   const articleId = urlParams.get("id");
 
   if (!articleSlug && !articleId) {
-    // ADDED: État vide si aucun paramètre
+    // État vide si aucun paramètre
     articlePage.innerHTML = `
-            <div style="max-width: 800px; margin: var(--spacing-xl) auto; padding: var(--spacing-xl); text-align: center;">
-                <h1 style="font-size: 2em; margin-bottom: var(--spacing-md); color: var(--color-text-primary);">Article introuvable</h1>
-                <p style="color: var(--color-text-secondary); margin-bottom: var(--spacing-lg);">Aucun identifiant d'article n'a été fourni.</p>
-                <a href="index.html" class="btn btn-primary">Retour à l'accueil</a>
-            </div>
-        `;
+      <div style="max-width: 800px; margin: var(--spacing-xl) auto; padding: var(--spacing-xl); text-align: center;">
+        <h1 style="font-size: 2em; margin-bottom: var(--spacing-md); color: var(--color-text-primary);">Article introuvable</h1>
+        <p style="color: var(--color-text-secondary); margin-bottom: var(--spacing-lg);">Aucun identifiant d'article n'a été fourni.</p>
+        <a href="index.html" class="btn btn-primary">Retour à l'accueil</a>
+      </div>
+    `;
     return;
   }
 
-  // ADDED: Priorité 1) slug param => getArticleBySlug, 2) sinon id param => lookup id
-  // IMPORTANT: Utiliser getArticlesData() qui merge data.js + localStorage override
+  // Recherche de l'article avec gestion d'erreur
   let article = null;
-  if (articleSlug) {
-    article = getArticleBySlug(articleSlug);
-  }
-  if (!article && articleId) {
-    const articles = getArticlesData(); // Source de vérité unique (merge data.js + override)
-    article = articles.find((a) => String(a.id) === String(articleId));
-    // ADDED: Si trouvé via id et que l'article a un slug, normaliser l'URL
-    if (article && article.slug) {
-      const newUrl = `article.html?slug=${encodeURIComponent(article.slug)}`;
-      if (window.history && window.history.replaceState) {
-        window.history.replaceState(null, "", newUrl);
+  try {
+    if (articleSlug) {
+      article = getArticleBySlug(articleSlug);
+    }
+    if (!article && articleId) {
+      const articles = getArticlesData();
+      if (Array.isArray(articles)) {
+        article = articles.find((a) => String(a.id) === String(articleId));
+        // Si trouvé via id et que l'article a un slug, normaliser l'URL
+        if (article && article.slug && window.history && window.history.replaceState) {
+          const newUrl = `article.html?slug=${encodeURIComponent(article.slug)}`;
+          window.history.replaceState(null, "", newUrl);
+        }
       }
     }
+  } catch (error) {
+    console.error("[renderArticlePage] Erreur lors de la recherche d'article:", error);
   }
 
   if (!article) {
-    // ADDED: État vide si article non trouvé
-    document.title = "Article introuvable – LE MONT DE LERMITE";
+    // État article non trouvé
+    if (typeof document !== "undefined" && document.title) {
+      document.title = "Article introuvable – LE MONT DE LERMITE";
+    }
     articlePage.innerHTML = `
-            <div style="max-width: 800px; margin: var(--spacing-xl) auto; padding: var(--spacing-xl); text-align: center;">
-                <h1 style="font-size: 2em; margin-bottom: var(--spacing-md); color: var(--color-text-primary);">Article introuvable</h1>
-                <p style="color: var(--color-text-secondary); margin-bottom: var(--spacing-lg);">L'article demandé n'existe pas ou a été supprimé.</p>
-                <a href="index.html" class="btn btn-primary">Retour à l'accueil</a>
-            </div>
-        `;
+      <div style="max-width: 800px; margin: var(--spacing-xl) auto; padding: var(--spacing-xl); text-align: center;">
+        <h1 style="font-size: 2em; margin-bottom: var(--spacing-md); color: var(--color-text-primary);">Article introuvable</h1>
+        <p style="color: var(--color-text-secondary); margin-bottom: var(--spacing-lg);">L'article demandé n'existe pas ou a été supprimé.</p>
+        <a href="index.html" class="btn btn-primary">Retour à l'accueil</a>
+      </div>
+    `;
     return;
   }
 
-  // ADDED: Construire le HTML de la page article
-  const title = toText(article.title) || "Sans titre";
-  const excerpt = toText(article.excerpt) || "";
-  const cover = toText(article.cover) || "";
+  // Construire le HTML de la page article de manière robuste
+  const title = (typeof toText === "function" ? toText(article.title) : article.title) || "Sans titre";
+  const excerpt = (typeof toText === "function" ? toText(article.excerpt) : article.excerpt) || "";
+  const cover = (typeof toText === "function" ? toText(article.cover) : article.cover) || "";
 
-  // ADDED: Mise à jour SEO (document.title et meta description)
-  document.title = `${title} – LE MONT DE LERMITE`;
-
-  // ADDED: Mettre à jour ou créer la meta description
-  let metaDesc = document.querySelector('meta[name="description"]');
-  if (!metaDesc) {
-    metaDesc = document.createElement("meta");
-    metaDesc.setAttribute("name", "description");
-    document.head.appendChild(metaDesc);
+  // Mise à jour SEO (document.title et meta description) - avec vérification de sécurité
+  if (typeof document !== "undefined" && document.title) {
+    document.title = `${title} – LE MONT DE LERMITE`;
   }
 
-  // ADDED: Description depuis excerpt, summary, premier bloc texte, ou fallback
-  let descriptionText = excerpt || article.summary || "";
-  if (
-    !descriptionText &&
-    contentBlocks &&
-    Array.isArray(contentBlocks) &&
-    contentBlocks.length > 0
-  ) {
-    // Chercher le premier bloc texte
-    const firstTextBlock = contentBlocks.find(
-      (block) => block.type === "text" && block.text,
-    );
-    if (firstTextBlock) {
-      descriptionText = toText(firstTextBlock.text).substring(0, 160);
+  // Mettre à jour ou créer la meta description - avec vérification de sécurité
+  if (typeof document !== "undefined" && document.querySelector && document.head) {
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+      metaDesc = document.createElement("meta");
+      metaDesc.setAttribute("name", "description");
+      document.head.appendChild(metaDesc);
     }
-  }
-  if (!descriptionText) {
-    descriptionText = title;
-  }
 
-  if (descriptionText) {
-    // Limiter à 160 caractères pour SEO
-    const truncatedDesc =
-      descriptionText.length > 160
-        ? descriptionText.substring(0, 157) + "..."
-        : descriptionText;
-    metaDesc.setAttribute("content", truncatedDesc);
-  } else {
-    metaDesc.setAttribute("content", "");
+    // Description depuis excerpt ou titre
+    let descriptionText = excerpt || title || "";
+    if (descriptionText.length > 160) {
+      descriptionText = descriptionText.substring(0, 157) + "...";
+    }
+    metaDesc.setAttribute("content", descriptionText);
   }
 
-  // ADDED: Debug temporaire (désactivable facilement en commentant la ligne suivante)
-  // console.log('Article page loaded:', { slug: article.slug, id: article.id, title });
+  // Extraction des blocs de contenu de manière robuste
+  const blocks =
+    Array.isArray(article.contentBlocks) ? article.contentBlocks :
+    Array.isArray(article.blocks) ? article.blocks :
+    Array.isArray(article.content) ? article.content :
+    null;
 
-  // ADDED: Hero avec cover si présente
-  let heroHtml = "";
-  if (
-    cover &&
-    cover.trim() &&
-    (cover.startsWith("http://") || cover.startsWith("https://"))
-  ) {
-    heroHtml = `<div class="hero-media article-media" style="background-image: url('${escapeHtml(cover)}');"></div>`;
+  // Construction du contenu HTML
+  let contentHtml = "";
+
+  // SI blocks est un array NON VIDE : render les blocs
+  if (blocks && Array.isArray(blocks) && blocks.length > 0) {
+    blocks.forEach((block) => {
+      if (!block || typeof block !== "object") return;
+
+      const blockType = block.type;
+      if (blockType === "text" && block.text) {
+        const text = (typeof toText === "function" ? toText(block.text) : block.text) || "";
+        if (text.trim()) {
+          contentHtml += `<p style="margin-bottom: var(--spacing-lg); line-height: 1.8; color: var(--color-text-primary); white-space: pre-wrap;">${(typeof escapeHtml === "function" ? escapeHtml(text) : text)}</p>`;
+        }
+      } else if (blockType === "heading" && block.text) {
+        const text = (typeof toText === "function" ? toText(block.text) : block.text) || "";
+        const level = (block.level === 3 || block.level === "h3") ? 3 : 2;
+        const tag = level === 3 ? "h3" : "h2";
+        if (text.trim()) {
+          contentHtml += `<${tag} style="margin-top: var(--spacing-xl); margin-bottom: var(--spacing-md); color: var(--color-text-primary); font-weight: var(--font-weight-semibold);">${(typeof escapeHtml === "function" ? escapeHtml(text) : text)}</${tag}>`;
+        }
+      }
+      // Autres types de blocs peuvent être ajoutés ici si nécessaire
+    });
   }
 
-  // ADDED: Construire les métadonnées (auteur + date) - affichées sous la cover
-  let metaHtml = "";
-  const authorId = toText(article.authorId || "");
-  const authorName = toText(article.author || article.authorName || "");
-  const publishedAt = toText(article.publishedAt || "");
+  // SINON SI article.content est une string : l'afficher
+  else if (typeof article.content === "string" && article.content.trim()) {
+    contentHtml = `<p style="margin-bottom: var(--spacing-lg); line-height: 1.8; color: var(--color-text-primary); white-space: pre-wrap;">${(typeof escapeHtml === "function" ? escapeHtml(article.content) : article.content)}</p>`;
+  }
 
-  if (authorName || publishedAt) {
-    const parts = [];
-    if (authorName && authorName.trim()) {
-      // Si authorId existe, rendre le nom cliquable vers membre.html
-      if (authorId && authorId.trim()) {
-        // ADDED: Utiliser slug si disponible, sinon id
-        const teamData = getTeamData();
-        const members =
-          teamData && Array.isArray(teamData.members) ? teamData.members : [];
-        const member = members.find((m) => {
-          const normalized = normalizeTeamMember(m);
-          return normalized && normalized.id === authorId;
-        });
-        const memberSlug = member
-          ? normalizeTeamMember(member)?.slug || authorId
-          : authorId;
-        parts.push(
-          `Par <a href="membre.html?member=${escapeHtml(memberSlug)}" style="color: var(--color-accent); text-decoration: none; transition: opacity var(--transition-base);" onmouseover="this.style.opacity='0.8';" onmouseout="this.style.opacity='1';">${escapeHtml(authorName.trim())}</a>`,
-        );
-      } else {
-        // Fallback : afficher sans lien
-        parts.push(`Par ${escapeHtml(authorName.trim())}`);
+  // SINON : afficher message neutre
+  else {
+    contentHtml = `<p style="margin-bottom: var(--spacing-lg); line-height: 1.8; color: var(--color-text-secondary); font-style: italic;">Contenu à venir</p>`;
+  }
+
+  // Construction du HTML final
+  let articleHtml = `<article class="article-content">`;
+
+  // Header avec titre
+  articleHtml += `<header class="article-header">`;
+  articleHtml += `<h1 class="article-title">${(typeof escapeHtml === "function" ? escapeHtml(title) : title)}</h1>`;
+
+  // Métadonnées (auteur + date) si disponibles
+  if (excerpt || article.author || article.publishedAt) {
+    articleHtml += `<div class="article-meta">`;
+    const metaParts = [];
+
+    if (excerpt) {
+      metaParts.push((typeof escapeHtml === "function" ? escapeHtml(excerpt) : excerpt));
+    }
+
+    if (article.author) {
+      const author = (typeof toText === "function" ? toText(article.author) : article.author) || "";
+      if (author.trim()) {
+        metaParts.push(`Par ${author.trim()}`);
       }
     }
-    if (publishedAt && publishedAt.trim()) {
-      const formattedDate = formatDateFrench(publishedAt.trim());
-      if (formattedDate) {
-        parts.push(formattedDate);
+
+    if (article.publishedAt) {
+      const date = (typeof toText === "function" ? toText(article.publishedAt) : article.publishedAt) || "";
+      if (date.trim()) {
+        metaParts.push(date.trim());
       }
     }
-    if (parts.length > 0) {
-      metaHtml = `<div class="article-meta">${parts.join(" • ")}</div>`;
+
+    if (metaParts.length > 0) {
+      articleHtml += metaParts.join(" • ");
     }
+    articleHtml += `</div>`;
   }
 
-  // REMOVED: Bloc legacy link-card supprimé définitivement
-  const ctaHtml = ""; // Variable déclarée pour éviter erreur console (bloc legacy supprimé)
+  articleHtml += `</header>`;
 
-  // ADDED: Contenu de l'article
-  const contentDiv = document.createElement("div");
-  contentDiv.className = "content";
+  // Contenu
+  articleHtml += `<div class="article-body">${contentHtml}</div>`;
 
-  // ADDED: Appeler la fonction existante pour le contenu (blocs ou fallback)
-  const blocks = getArticleBlocks(article);
+  // Footer avec lien retour
+  articleHtml += `<footer class="article-footer">`;
+  articleHtml += `<a href="actu.html" class="btn btn-secondary">← Retour aux articles</a>`;
+  articleHtml += `</footer>`;
 
-  // FIX DE SECOURS: Fonction utilitaire pour résoudre l'image du bloc offer depuis plusieurs sources
+  articleHtml += `</article>`;
+
+  // Appliquer le HTML à la page
+  articlePage.innerHTML = articleHtml;
+}
+
+/**
+ * Fonction renderArticleContent() supprimée - plus nécessaire
+ * Remplacée par renderArticlePage() plus simple et robuste
+ */
+function renderArticleContent() {
   function resolveOfferImage(article) {
     // 1) link direct
     const link = article?.link || {};
@@ -16124,7 +16162,9 @@ function renderArticlePage() {
     if (linkImage) return linkImage;
 
     // 2) chercher dans blocks
-    const blocks = article?.contentBlocks || article?.blocks || [];
+    const blocks = Array.isArray(article?.contentBlocks) ? article.contentBlocks :
+                   Array.isArray(article?.blocks) ? article.blocks :
+                   Array.isArray(article?.content) ? article.content : [];
     const offer =
       blocks.find((b) => {
         const t = (b?.type || "").toLowerCase();
@@ -16146,7 +16186,7 @@ function renderArticlePage() {
       offer.link?.mediaUrl,
     ].filter((v) => typeof v === "string" && v.trim());
 
-    // CHECKPOINT C: Log resolveOfferImage
+    // Résoudre l'image de l'offre
 
     if (candidates.length) return candidates[0].trim();
 
@@ -16164,7 +16204,9 @@ function renderArticlePage() {
             return l.imageUrl.trim();
           if (typeof l.image === "string" && l.image.trim())
             return l.image.trim();
-          const bs = a.contentBlocks || a.blocks || [];
+          const bs = Array.isArray(a.contentBlocks) ? a.contentBlocks :
+                      Array.isArray(a.blocks) ? a.blocks :
+                      Array.isArray(a.content) ? a.content : [];
           const ob =
             bs.find(
               (b) =>
@@ -16412,38 +16454,9 @@ function renderArticlePage() {
  * ADDED: Rend le contenu d'un article avec blocs sur les pages publiques (ancienne fonction, gardée pour compatibilité)
  */
 function renderArticleContent() {
-  const contentDiv = document.querySelector(".content");
-  if (!contentDiv) return;
-
-  // Récupérer l'ID de l'article depuis l'URL ou le pathname
-  const pathname = window.location.pathname;
-  const articleIdMatch = pathname.match(/articles\/([^\/]+)\.html/);
-  if (!articleIdMatch) return;
-
-  const articleId = articleIdMatch[1];
-  const articles = getArticlesData();
-  const article = articles.find((a) => a.id === articleId);
-
-  if (!article) return;
-
-  // Si l'article a des blocs, les afficher (support contentBlocks et blocks pour compatibilité)
-  const blocks = getArticleBlocks(article);
-
-  if (blocks.length > 0) {
-    let html = "";
-
-    blocks.forEach((block) => {
-      if (block.type === "text") {
-        const text = toText(block.text);
-        if (text) {
-          // Garder les retours à la ligne via <br> ou paragraphes multiples
-          const paragraphs = text.split("\n").filter((p) => p.trim());
-          if (paragraphs.length > 0) {
-            paragraphs.forEach((p) => {
-              html += `<p style="margin-bottom: var(--spacing-lg); line-height: 1.8; color: var(--color-text-primary); white-space: pre-wrap;">${escapeHtml(p)}</p>`;
-            });
-          }
-        }
+  // Fonction obsolète - remplacée par renderArticlePage()
+  console.warn("[renderArticleContent] Fonction obsolète - utiliser renderArticlePage()");
+  return;
       } else if (block.type === "heading") {
         // Convertir level (2/3 ou 'h2'/'h3') en balise HTML
         const levelNum =
@@ -17530,6 +17543,11 @@ function initPublicPages() {
 
   // ADDED: Rendre les articles sur index.html
   renderHomeArticles();
+
+  // ADDED: Initialiser la page article
+  if (window.location.pathname.includes("article.html")) {
+    renderArticlePage();
+  }
 
   // ADDED: Initialiser la page contact
   if (window.location.pathname.includes("contact.html")) {
@@ -18652,6 +18670,78 @@ if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initApp);
 } else {
   initApp();
+}
+
+// ============================================
+// RENDU DYNAMIQUE DE LA PAGE ARTICLE
+// ============================================
+
+function renderArticlePage() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const slug = urlParams.get('slug');
+  const id = urlParams.get('id');
+
+  const articles = getArticlesData();
+  let article = null;
+
+  // Chercher par slug en priorité
+  if (slug) {
+    article = articles.find(a => a.slug === slug);
+  }
+  // Sinon chercher par id
+  else if (id) {
+    article = articles.find(a => a.id === id);
+  }
+
+  const articlePage = document.getElementById('article-page');
+  if (!articlePage) return;
+
+  if (!article) {
+    // Article non trouvé
+    articlePage.innerHTML = `
+      <div class="article-not-found">
+        <h1>Article introuvable</h1>
+        <p>Cet article n'existe pas ou a été supprimé.</p>
+        <a href="actu.html" class="btn btn-primary">Voir tous les articles</a>
+      </div>
+    `;
+    return;
+  }
+
+  // Si trouvé par id et que l'article a un slug, canonicaliser l'URL
+  if (id && article.slug && !slug) {
+    const newUrl = `${window.location.pathname}?slug=${encodeURIComponent(article.slug)}`;
+    history.replaceState(null, '', newUrl);
+  }
+
+  // Rendre l'article
+  const articleHtml = `
+    <article class="article-content">
+      <header class="article-header">
+        <h1 class="article-title">${escapeHtml(article.title)}</h1>
+        <div class="article-meta">
+          <time datetime="${article.date}">${formatDate(article.date)}</time>
+          ${article.author ? `<span class="article-author">Par ${escapeHtml(article.author)}</span>` : ''}
+        </div>
+      </header>
+
+      ${article.image ? `
+        <figure class="article-image">
+          <img src="${escapeHtml(article.image)}" alt="${escapeHtml(article.title)}" loading="lazy">
+        </figure>
+      ` : ''}
+
+      <div class="article-body">
+        ${article.content || '<p>Contenu à venir...</p>'}
+      </div>
+
+      <footer class="article-footer">
+        <a href="actu.html" class="btn btn-secondary">← Retour aux articles</a>
+      </footer>
+    </article>
+  `;
+
+  articlePage.innerHTML = articleHtml;
 }
 
 // ============================================

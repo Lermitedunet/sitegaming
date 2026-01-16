@@ -22862,21 +22862,6 @@ function updateAuthUI(user) {
   const authButtonsContainer = getOrCreateAuthHost();
   if (!authButtonsContainer) return;
 
-  // TOGGLE AUTORITAIRE HEADER AUTH UI: Forcer les displays avec !important
-  const header = document.querySelector('header');
-  const containers = header ? Array.from(header.querySelectorAll('.header-buttons')) : [];
-  const publicContainers = containers.filter(el => el.id !== 'headerAuthButtons');
-
-  if (user) {
-    // Utilisateur connecté: SEUL #headerAuthButtons visible
-    publicContainers.forEach(el => el.style.setProperty('display', 'none', 'important'));
-    authButtonsContainer.style.setProperty('display', 'flex', 'important');
-  } else {
-    // Utilisateur non connecté: SEUL le bloc public visible
-    publicContainers.forEach(el => el.style.setProperty('display', 'flex', 'important'));
-    authButtonsContainer.style.setProperty('display', 'none', 'important');
-  }
-
   // Nettoyer les anciens éléments d'auth avant de rendre la nouvelle UI
   cleanupLegacyAuthUI();
 
@@ -23006,6 +22991,30 @@ if (document.getElementById("signupForm")) {
 
 // NOTE: Auth UI maintenant gérée centralement par initAuthRoutingAndUI
 
+// UTILITAIRE POUR FORCER DISPLAY AVEC !IMPORTANT
+function setDisp(el, value) {
+  if (!el) return;
+  el.style.setProperty('display', value, 'important');
+}
+
+// FONCTION ROBUSTE POUR ENFORCER VISIBILITÉ HEADER AUTH
+function enforceHeaderAuthVisibility(isLoggedIn) {
+  const header = document.querySelector('header');
+  if (!header) return;
+
+  const authHost = document.getElementById('headerAuthButtons');
+  const containers = Array.from(header.querySelectorAll('.header-buttons'));
+  const publicContainers = containers.filter(el => el.id !== 'headerAuthButtons');
+
+  if (isLoggedIn) {
+    publicContainers.forEach(el => setDisp(el, 'none'));
+    setDisp(authHost, 'flex');
+  } else {
+    publicContainers.forEach(el => setDisp(el, 'flex'));
+    setDisp(authHost, 'none');
+  }
+}
+
 // ADDED: Liste des emails autorisés pour admin.html
 const ADMIN_EMAILS = [
   "lermitedunet@gmail.com",
@@ -23081,6 +23090,11 @@ async function initAuthRoutingAndUI() {
     publicContainers.forEach(el => el.style.setProperty('display', 'flex', 'important'));
     if (authButtonsContainer) authButtonsContainer.style.setProperty('display', 'none', 'important');
 
+    // ENFORCER VISIBILITÉ HEADER AUTH: En fallback, utilisateur non connecté
+    enforceHeaderAuthVisibility(false);
+    setTimeout(() => enforceHeaderAuthVisibility(false), 0);
+    setTimeout(() => enforceHeaderAuthVisibility(false), 50);
+
     // FIX CRITIQUE: Même en fallback, purger les anciens boutons
     setTimeout(() => hardFixHeaderAuthOverlap(), 100);
     return;
@@ -23099,6 +23113,12 @@ async function initAuthRoutingAndUI() {
 
     // Mise à jour de l'UI après résolution auth
     updateAuthUI(user);
+
+    // ENFORCER VISIBILITÉ HEADER AUTH: Appeler immédiatement et avec timeouts pour couvrir injection tardive
+    const isLoggedIn = !!user;
+    enforceHeaderAuthVisibility(isLoggedIn);
+    setTimeout(() => enforceHeaderAuthVisibility(isLoggedIn), 0);
+    setTimeout(() => enforceHeaderAuthVisibility(isLoggedIn), 50);
 
     // FIX CRITIQUE: Purge HARD des anciens boutons sur jeu.html et article.html
     setTimeout(() => hardFixHeaderAuthOverlap(), 100);

@@ -22862,19 +22862,19 @@ function updateAuthUI(user) {
   const authButtonsContainer = getOrCreateAuthHost();
   if (!authButtonsContainer) return;
 
-  // TOGGLE ROBUSTE HEADER AUTH UI: Corriger le chevauchement entre blocs statiques et dynamiques
+  // TOGGLE AUTORITAIRE HEADER AUTH UI: Forcer les displays avec !important
   const header = document.querySelector('header');
-  const allBtnContainers = header ? Array.from(header.querySelectorAll('.header-buttons')) : [];
-  const publicContainers = allBtnContainers.filter(el => el.id !== 'headerAuthButtons');
+  const containers = header ? Array.from(header.querySelectorAll('.header-buttons')) : [];
+  const publicContainers = containers.filter(el => el.id !== 'headerAuthButtons');
 
   if (user) {
-    // Utilisateur connecté: cacher tous les blocs statiques, afficher le bloc dynamique
-    publicContainers.forEach(el => el.style.display = 'none');
-    authButtonsContainer.style.display = 'flex';
+    // Utilisateur connecté: SEUL #headerAuthButtons visible
+    publicContainers.forEach(el => el.style.setProperty('display', 'none', 'important'));
+    authButtonsContainer.style.setProperty('display', 'flex', 'important');
   } else {
-    // Utilisateur non connecté: afficher les blocs statiques, cacher le bloc dynamique
-    publicContainers.forEach(el => el.style.display = 'flex');
-    authButtonsContainer.style.display = 'none';
+    // Utilisateur non connecté: SEUL le bloc public visible
+    publicContainers.forEach(el => el.style.setProperty('display', 'flex', 'important'));
+    authButtonsContainer.style.setProperty('display', 'none', 'important');
   }
 
   // Nettoyer les anciens éléments d'auth avant de rendre la nouvelle UI
@@ -23073,13 +23073,13 @@ async function initAuthRoutingAndUI() {
       `;
     }
 
-    // TOGGLE HEADER AUTH UI: En fallback, utilisateur non connecté
+    // TOGGLE AUTORITAIRE HEADER AUTH UI: En fallback, utilisateur non connecté
     const header = document.querySelector('header');
-    const allBtnContainers = header ? Array.from(header.querySelectorAll('.header-buttons')) : [];
-    const publicContainers = allBtnContainers.filter(el => el.id !== 'headerAuthButtons');
+    const containers = header ? Array.from(header.querySelectorAll('.header-buttons')) : [];
+    const publicContainers = containers.filter(el => el.id !== 'headerAuthButtons');
 
-    publicContainers.forEach(el => el.style.display = 'flex');
-    if (authButtonsContainer) authButtonsContainer.style.display = 'none';
+    publicContainers.forEach(el => el.style.setProperty('display', 'flex', 'important'));
+    if (authButtonsContainer) authButtonsContainer.style.setProperty('display', 'none', 'important');
 
     // FIX CRITIQUE: Même en fallback, purger les anciens boutons
     setTimeout(() => hardFixHeaderAuthOverlap(), 100);

@@ -22862,6 +22862,21 @@ function updateAuthUI(user) {
   const authButtonsContainer = getOrCreateAuthHost();
   if (!authButtonsContainer) return;
 
+  // TOGGLE ROBUSTE HEADER AUTH UI: Corriger le chevauchement entre blocs statiques et dynamiques
+  const header = document.querySelector('header');
+  const allBtnContainers = header ? Array.from(header.querySelectorAll('.header-buttons')) : [];
+  const publicContainers = allBtnContainers.filter(el => el.id !== 'headerAuthButtons');
+
+  if (user) {
+    // Utilisateur connecté: cacher tous les blocs statiques, afficher le bloc dynamique
+    publicContainers.forEach(el => el.style.display = 'none');
+    authButtonsContainer.style.display = 'flex';
+  } else {
+    // Utilisateur non connecté: afficher les blocs statiques, cacher le bloc dynamique
+    publicContainers.forEach(el => el.style.display = 'flex');
+    authButtonsContainer.style.display = 'none';
+  }
+
   // Nettoyer les anciens éléments d'auth avant de rendre la nouvelle UI
   cleanupLegacyAuthUI();
 
@@ -23059,11 +23074,12 @@ async function initAuthRoutingAndUI() {
     }
 
     // TOGGLE HEADER AUTH UI: En fallback, utilisateur non connecté
-    const staticButtons = document.querySelector('.header-buttons');
-    const dynamicButtons = document.getElementById('headerAuthButtons');
+    const header = document.querySelector('header');
+    const allBtnContainers = header ? Array.from(header.querySelectorAll('.header-buttons')) : [];
+    const publicContainers = allBtnContainers.filter(el => el.id !== 'headerAuthButtons');
 
-    if (staticButtons) staticButtons.style.display = 'flex';
-    if (dynamicButtons) dynamicButtons.style.display = 'none';
+    publicContainers.forEach(el => el.style.display = 'flex');
+    if (authButtonsContainer) authButtonsContainer.style.display = 'none';
 
     // FIX CRITIQUE: Même en fallback, purger les anciens boutons
     setTimeout(() => hardFixHeaderAuthOverlap(), 100);
@@ -23083,20 +23099,6 @@ async function initAuthRoutingAndUI() {
 
     // Mise à jour de l'UI après résolution auth
     updateAuthUI(user);
-
-    // TOGGLE HEADER AUTH UI: Corriger le chevauchement entre blocs statiques et dynamiques
-    const staticButtons = document.querySelector('.header-buttons');
-    const dynamicButtons = document.getElementById('headerAuthButtons');
-
-    if (user) {
-      // Utilisateur connecté: cacher boutons statiques, afficher boutons dynamiques
-      if (staticButtons) staticButtons.style.display = 'none';
-      if (dynamicButtons) dynamicButtons.style.display = 'flex';
-    } else {
-      // Utilisateur non connecté: afficher boutons statiques, cacher boutons dynamiques
-      if (staticButtons) staticButtons.style.display = 'flex';
-      if (dynamicButtons) dynamicButtons.style.display = 'none';
-    }
 
     // FIX CRITIQUE: Purge HARD des anciens boutons sur jeu.html et article.html
     setTimeout(() => hardFixHeaderAuthOverlap(), 100);

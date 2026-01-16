@@ -22859,82 +22859,11 @@ function cleanupLegacyAuthUI() {
 function updateAuthUI(user) {
   if (!authResolved) return;
 
-  const authButtonsContainer = getOrCreateAuthHost();
-  if (!authButtonsContainer) return;
-
   // Nettoyer les anciens éléments d'auth avant de rendre la nouvelle UI
   cleanupLegacyAuthUI();
 
-  // Gestion de la visibilité des boutons statiques login/signup
-  const loginButtons = document.querySelectorAll('a[href="login.html"]');
-  const signupButtons = document.querySelectorAll('a[href="signup.html"]');
-
-  // Nettoyer tout contenu existant
-  authButtonsContainer.innerHTML = '';
-
-  if (user) {
-    // Utilisateur connecté - cacher les boutons login/signup
-    loginButtons.forEach(btn => btn.style.display = 'none');
-    signupButtons.forEach(btn => btn.style.display = 'none');
-
-    // Créer un conteneur interne avec position relative pour le dropdown
-    const authInnerContainer = document.createElement('div');
-    authInnerContainer.className = 'header-auth-inner';
-    authInnerContainer.style.cssText = `
-      position: relative;
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-sm);
-    `;
-
-    // Bouton Admin uniquement pour les admins
-    const isAdmin = isAllowedAdmin(user.email);
-    if (isAdmin) {
-      const adminButton = document.createElement('a');
-      adminButton.href = 'admin.html';
-      adminButton.className = 'btn btn-outline';
-      adminButton.style.cssText = 'font-size: 0.875em;';
-      adminButton.textContent = 'Admin';
-      authInnerContainer.appendChild(adminButton);
-    }
-
-    // Créer l'avatar
-    const avatar = createUserAvatar(user);
-
-    // Créer le menu (position absolute par rapport au conteneur)
-    const menu = createUserMenu(user);
-
-    // Gestionnaire de clic sur l'avatar
-    avatar.addEventListener('click', () => toggleUserMenu(avatar, menu, user));
-    avatar.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleUserMenu(avatar, menu, user);
-      }
-    });
-
-    // Wrapper pour l'avatar avec position relative
-    const avatarWrapper = document.createElement('div');
-    avatarWrapper.className = 'user-avatar-wrapper';
-    avatarWrapper.style.cssText = `
-      position: relative;
-    `;
-    avatarWrapper.appendChild(avatar);
-    avatarWrapper.appendChild(menu); // Menu reste dans le wrapper pour position:absolute
-
-    authInnerContainer.appendChild(avatarWrapper);
-    authButtonsContainer.appendChild(authInnerContainer);
-
-  } else {
-    // Utilisateur non connecté - afficher les boutons login/signup
-    loginButtons.forEach(btn => btn.style.display = 'inline-flex');
-    signupButtons.forEach(btn => btn.style.display = 'inline-flex');
-
-    authButtonsContainer.innerHTML = `
-      <a href="login.html" class="btn btn-outline" style="font-size: 0.875em;">Se connecter</a>
-      <a href="signup.html" class="btn btn-primary" style="font-size: 0.875em;">S'inscrire</a>
-    `;
-  }
+  // Le contenu sera injecté par renderHeaderAuthButtons() appelée depuis onAuthStateChanged
+  // Le toggle sera appliqué par enforceHeaderAuthVisibility() appelée depuis onAuthStateChanged
 }
 
 // ADDED: Initialisation des formulaires d'authentification
@@ -22995,6 +22924,145 @@ if (document.getElementById("signupForm")) {
 function setDisp(el, value) {
   if (!el) return;
   el.style.setProperty('display', value, 'important');
+}
+
+// FONCTION POUR RENDRE LE CONTENU DE #headerAuthButtons
+function renderHeaderAuthButtons(user) {
+  const authHost = getOrCreateAuthHost();
+  if (!authHost) return;
+
+  // Nettoyer tout contenu existant
+  authHost.innerHTML = '';
+
+  if (user) {
+    // Utilisateur connecté: injecter Admin + avatar
+    const authInnerContainer = document.createElement('div');
+    authInnerContainer.className = 'header-auth-inner';
+    authInnerContainer.style.cssText = `
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    `;
+
+    // Bouton Admin uniquement pour les admins
+    const isAdmin = isAllowedAdmin(user.email);
+    if (isAdmin) {
+      const adminButton = document.createElement('a');
+      adminButton.href = 'admin.html';
+      adminButton.className = 'btn btn-outline';
+      adminButton.style.cssText = 'font-size: 0.875em;';
+      adminButton.textContent = 'Admin';
+      authInnerContainer.appendChild(adminButton);
+    }
+
+    // Avatar avec dropdown (réutiliser la logique existante)
+    const avatarWrapper = document.createElement('div');
+    avatarWrapper.className = 'user-avatar-wrapper';
+    avatarWrapper.style.cssText = 'position: relative;';
+
+    const avatarButton = document.createElement('button');
+    avatarButton.className = 'user-avatar';
+    avatarButton.style.cssText = `
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    `;
+
+    // Initiale de l'utilisateur
+    const initial = (user.displayName || user.email || 'U')[0].toUpperCase();
+    avatarButton.textContent = initial;
+
+    // Menu dropdown
+    const dropdownMenu = document.createElement('div');
+    dropdownMenu.className = 'user-menu';
+    dropdownMenu.style.cssText = `
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 8px 0;
+      min-width: 180px;
+      z-index: 9999;
+      display: none;
+    `;
+
+    // Items du menu
+    const menuItems = [
+      { text: 'Modifier le profil', action: () => alert('Bientôt disponible') },
+      { text: 'Paramètres', action: () => alert('Bientôt disponible') },
+      { type: 'separator' },
+      { text: 'Se déconnecter', action: () => handleUserLogout() }
+    ];
+
+    menuItems.forEach(item => {
+      if (item.type === 'separator') {
+        const separator = document.createElement('div');
+        separator.style.cssText = 'height: 1px; background: rgba(255, 255, 255, 0.1); margin: 4px 0;';
+        dropdownMenu.appendChild(separator);
+      } else {
+        const menuItem = document.createElement('button');
+        menuItem.className = 'user-menu-item';
+        menuItem.style.cssText = `
+          width: 100%;
+          padding: 8px 16px;
+          border: none;
+          background: none;
+          color: #E5E7EB;
+          text-align: left;
+          cursor: pointer;
+          font-size: 14px;
+          transition: background-color 0.2s ease;
+        `;
+        menuItem.textContent = item.text;
+        menuItem.addEventListener('click', item.action);
+        menuItem.addEventListener('mouseenter', () => menuItem.style.backgroundColor = 'rgba(255, 255, 255, 0.1)');
+        menuItem.addEventListener('mouseleave', () => menuItem.style.backgroundColor = 'transparent');
+        dropdownMenu.appendChild(menuItem);
+      }
+    });
+
+    // Toggle du menu au clic
+    avatarButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isVisible = dropdownMenu.style.display === 'block';
+      dropdownMenu.style.display = isVisible ? 'none' : 'block';
+    });
+
+    // Fermer au clic extérieur
+    document.addEventListener('click', (e) => {
+      if (!avatarWrapper.contains(e.target)) {
+        dropdownMenu.style.display = 'none';
+      }
+    });
+
+    // Fermer avec Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        dropdownMenu.style.display = 'none';
+      }
+    });
+
+    avatarWrapper.appendChild(avatarButton);
+    avatarWrapper.appendChild(dropdownMenu);
+    authInnerContainer.appendChild(avatarWrapper);
+
+    authHost.appendChild(authInnerContainer);
+  }
+  // Si user est null, authHost reste vide
 }
 
 // FONCTION ROBUSTE POUR ENFORCER VISIBILITÉ HEADER AUTH
@@ -23082,14 +23150,7 @@ async function initAuthRoutingAndUI() {
       `;
     }
 
-    // TOGGLE AUTORITAIRE HEADER AUTH UI: En fallback, utilisateur non connecté
-    const header = document.querySelector('header');
-    const containers = header ? Array.from(header.querySelectorAll('.header-buttons')) : [];
-    const publicContainers = containers.filter(el => el.id !== 'headerAuthButtons');
-
-    publicContainers.forEach(el => el.style.setProperty('display', 'flex', 'important'));
-    if (authButtonsContainer) authButtonsContainer.style.setProperty('display', 'none', 'important');
-
+    // GARANTIR CONTENU AVANT TOGGLE: En fallback, #headerAuthButtons reste vide
     // ENFORCER VISIBILITÉ HEADER AUTH: En fallback, utilisateur non connecté
     enforceHeaderAuthVisibility(false);
     setTimeout(() => enforceHeaderAuthVisibility(false), 0);
@@ -23114,7 +23175,10 @@ async function initAuthRoutingAndUI() {
     // Mise à jour de l'UI après résolution auth
     updateAuthUI(user);
 
-    // ENFORCER VISIBILITÉ HEADER AUTH: Appeler immédiatement et avec timeouts pour couvrir injection tardive
+    // GARANTIR CONTENU AVANT TOGGLE: Injecter d'abord le contenu dans #headerAuthButtons
+    renderHeaderAuthButtons(user);
+
+    // ENFORCER VISIBILITÉ HEADER AUTH: Puis appliquer le toggle avec timeouts
     const isLoggedIn = !!user;
     enforceHeaderAuthVisibility(isLoggedIn);
     setTimeout(() => enforceHeaderAuthVisibility(isLoggedIn), 0);

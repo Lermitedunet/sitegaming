@@ -23058,6 +23058,13 @@ async function initAuthRoutingAndUI() {
       `;
     }
 
+    // TOGGLE HEADER AUTH UI: En fallback, utilisateur non connecté
+    const staticButtons = document.querySelector('.header-buttons');
+    const dynamicButtons = document.getElementById('headerAuthButtons');
+
+    if (staticButtons) staticButtons.style.display = 'flex';
+    if (dynamicButtons) dynamicButtons.style.display = 'none';
+
     // FIX CRITIQUE: Même en fallback, purger les anciens boutons
     setTimeout(() => hardFixHeaderAuthOverlap(), 100);
     return;
@@ -23076,6 +23083,20 @@ async function initAuthRoutingAndUI() {
 
     // Mise à jour de l'UI après résolution auth
     updateAuthUI(user);
+
+    // TOGGLE HEADER AUTH UI: Corriger le chevauchement entre blocs statiques et dynamiques
+    const staticButtons = document.querySelector('.header-buttons');
+    const dynamicButtons = document.getElementById('headerAuthButtons');
+
+    if (user) {
+      // Utilisateur connecté: cacher boutons statiques, afficher boutons dynamiques
+      if (staticButtons) staticButtons.style.display = 'none';
+      if (dynamicButtons) dynamicButtons.style.display = 'flex';
+    } else {
+      // Utilisateur non connecté: afficher boutons statiques, cacher boutons dynamiques
+      if (staticButtons) staticButtons.style.display = 'flex';
+      if (dynamicButtons) dynamicButtons.style.display = 'none';
+    }
 
     // FIX CRITIQUE: Purge HARD des anciens boutons sur jeu.html et article.html
     setTimeout(() => hardFixHeaderAuthOverlap(), 100);

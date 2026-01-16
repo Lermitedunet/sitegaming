@@ -7169,3 +7169,35 @@ footer {
         border-top: 1px solid rgba(255, 255, 255, 0.06);
     }
 }
+
+/* ============================================
+   FIX AUTH UI - NETTOYAGE ET LAYOUT
+   ============================================ */
+
+/* Layout stable pour #headerAuthButtons */
+header #headerAuthButtons {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex-wrap: nowrap !important;
+    min-width: 0 !important;
+}
+
+/* Conteneurs d'actions header droite */
+.header-right,
+.nav-actions,
+.header-actions,
+.header-buttons:has(#headerAuthButtons) {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 12px !important;
+    flex-wrap: nowrap !important;
+    min-width: 0 !important;
+}
+
+/* Garde-fou vertical-align pour compatibilité */
+header a[href*="admin"],
+header #headerAuthButtons {
+    vertical-align: middle;
+}

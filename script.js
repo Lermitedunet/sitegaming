@@ -22624,22 +22624,33 @@ function getOrCreateAuthHost() {
     return host;
   }
 
-  // Si pas trouvé, essayer de le créer dans .header-top ou header
+  // Chercher le meilleur endroit pour placer #headerAuthButtons
   const headerTop = document.querySelector('.header-top');
   if (headerTop) {
-    // Créer le conteneur et l'insérer avant le burger menu
-    host = document.createElement('div');
-    host.id = 'headerAuthButtons';
-    host.className = 'header-buttons';
+    // Chercher un conteneur d'actions existant (bouton Admin, etc.)
+    const actionContainer = headerTop.querySelector('.header-buttons, .header-actions, .nav-actions, .header-right');
 
-    const burgerMenu = headerTop.querySelector('.nav-burger, .nav-toggle');
-    if (burgerMenu) {
-      headerTop.insertBefore(host, burgerMenu);
+    if (actionContainer && !actionContainer.id) {
+      // Réutiliser le conteneur existant
+      actionContainer.id = 'headerAuthButtons';
+      actionContainer.innerHTML = ''; // Vider le contenu existant
+      return actionContainer;
     } else {
-      headerTop.appendChild(host);
-    }
+      // Créer un nouveau conteneur et l'insérer au bon endroit
+      host = document.createElement('div');
+      host.id = 'headerAuthButtons';
+      host.className = 'header-buttons';
 
-    return host;
+      // Placer avant le burger menu ou à la fin
+      const burgerMenu = headerTop.querySelector('.nav-burger, .nav-toggle');
+      if (burgerMenu) {
+        headerTop.insertBefore(host, burgerMenu);
+      } else {
+        headerTop.appendChild(host);
+      }
+
+      return host;
+    }
   }
 
   // Fallback: créer dans header
@@ -22683,11 +22694,71 @@ function getOrCreateAuthHost() {
 /**
  * MISE À JOUR DE L'UI APRÈS RÉSOLUTION AUTH
  */
+/**
+ * Nettoie les anciens éléments d'auth du header pour éviter les chevauchements
+ */
+function cleanupLegacyAuthUI() {
+  const header = document.querySelector('header');
+  if (!header) return;
+
+  // Éviter les doublons #headerAuthButtons
+  const authContainers = header.querySelectorAll('#headerAuthButtons');
+  if (authContainers.length > 1) {
+    // Garder le premier, supprimer les autres
+    for (let i = 1; i < authContainers.length; i++) {
+      authContainers[i].remove();
+    }
+  }
+
+  // Cibler et masquer les anciens boutons login/signup dans le header
+  // (mais pas ceux à l'intérieur de #headerAuthButtons)
+
+  // 1. Liens avec href contenant login.html ou signup.html
+  const legacyLoginLinks = header.querySelectorAll('a[href*="login.html"]:not(#headerAuthButtons a)');
+  const legacySignupLinks = header.querySelectorAll('a[href*="signup.html"]:not(#headerAuthButtons a)');
+
+  legacyLoginLinks.forEach(link => {
+    if (!link.closest('#headerAuthButtons')) {
+      link.style.display = 'none';
+    }
+  });
+
+  legacySignupLinks.forEach(link => {
+    if (!link.closest('#headerAuthButtons')) {
+      link.style.display = 'none';
+    }
+  });
+
+  // 2. Éléments dont le texte contient des mots-clés d'auth
+  const allHeaderLinks = header.querySelectorAll('a:not(#headerAuthButtons a)');
+  const authKeywords = ['se connecter', 'connexion', 'connecter', 's\'inscrire', 'inscrire', 'inscription'];
+
+  allHeaderLinks.forEach(link => {
+    const text = link.textContent.trim().toLowerCase();
+    const isAuthLink = authKeywords.some(keyword => text.includes(keyword));
+
+    if (isAuthLink && !link.closest('#headerAuthButtons')) {
+      link.style.display = 'none';
+    }
+  });
+
+  // 3. Anciens conteneurs d'auth si existants
+  const legacyContainers = header.querySelectorAll('.auth-buttons, .login-buttons, #authButtons');
+  legacyContainers.forEach(container => {
+    if (!container.closest('#headerAuthButtons')) {
+      container.style.display = 'none';
+    }
+  });
+}
+
 function updateAuthUI(user) {
   if (!authResolved) return;
 
   const authButtonsContainer = getOrCreateAuthHost();
   if (!authButtonsContainer) return;
+
+  // Nettoyer les anciens éléments d'auth avant de rendre la nouvelle UI
+  cleanupLegacyAuthUI();
 
   // Gestion de la visibilité des boutons statiques login/signup
   const loginButtons = document.querySelectorAll('a[href="login.html"]');

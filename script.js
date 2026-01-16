@@ -22695,6 +22695,111 @@ function getOrCreateAuthHost() {
  * MISE À JOUR DE L'UI APRÈS RÉSOLUTION AUTH
  */
 /**
+ * FIX CRITIQUE: Purge HARD des anciens boutons auth sur jeu.html et article.html
+ * N'exécute que sur ces pages pour éviter les conflits avec d'autres layouts
+ */
+function hardFixHeaderAuthOverlap() {
+  // N'exécuter QUE sur jeu.html et article.html
+  const pathname = window.location.pathname;
+  if (!pathname.includes('/jeu.html') && !pathname.includes('/article.html')) {
+    return;
+  }
+
+  console.log('[AUTH] Hard fix header overlap on:', pathname);
+
+  const header = document.querySelector('header') || document.querySelector('.site-header');
+  if (!header) return;
+
+  // 1. Localiser la zone d'actions à droite
+  const candidates = [
+    header.querySelector('.header-right'),
+    header.querySelector('.header-actions'),
+    header.querySelector('.nav-actions'),
+    header.querySelector('.top-right'),
+    document.querySelector('#headerAuthButtons')?.parentElement
+  ].filter(Boolean);
+
+  const actionsZone = candidates[0] || header.querySelector('.header-top') || header;
+
+  // 2. Garantir un unique host bien placé
+  let host = getOrCreateAuthHost();
+  if (!host) return;
+
+  // Déplacer host dans actionsZone si nécessaire
+  if (host.parentElement !== actionsZone) {
+    // D'abord vider actionsZone des éléments auth existants
+    const existingAuthElements = actionsZone.querySelectorAll('a[href*="login"], a[href*="signup"], .auth-buttons, .login-buttons, .signup-buttons');
+    existingAuthElements.forEach(el => {
+      if (!el.closest('#headerAuthButtons')) {
+        el.remove();
+      }
+    });
+
+    actionsZone.appendChild(host);
+  }
+
+  // 3. PURGER TOUS les éléments legacy dans actionsZone
+  const elementsToCheck = Array.from(actionsZone.querySelectorAll('a, button, div, span'));
+
+  elementsToCheck.forEach(element => {
+    // NE PAS supprimer #headerAuthButtons ni ses descendants
+    if (element.closest('#headerAuthButtons')) return;
+
+    // NE PAS supprimer les éléments admin
+    if (element.href?.includes('admin.html') ||
+        element.classList.contains('admin') ||
+        element.hasAttribute('data-admin')) return;
+
+    // NE PAS supprimer le logo/titre du site
+    if (element.tagName === 'H1' ||
+        element.querySelector('h1') ||
+        element.classList.contains('header-content') ||
+        element.id === 'site-title') return;
+
+    const href = element.href || '';
+    const text = element.textContent?.trim().toLowerCase() || '';
+    const id = element.id || '';
+    const classes = element.className || '';
+
+    // Critères de suppression des éléments legacy
+    const shouldRemove =
+      // Liens href login/signup
+      href.includes('login.html') ||
+      href.includes('signup.html') ||
+      // Texte contient mots-clés auth
+      text.includes('se connecter') ||
+      text.includes('connexion') ||
+      text.includes('connecter') ||
+      text.includes('s\'inscrire') ||
+      text.includes('inscrire') ||
+      text.includes('inscription') ||
+      // IDs/classes legacy
+      id.includes('authButtons') ||
+      id.includes('loginButtons') ||
+      id.includes('signupButtons') ||
+      classes.includes('auth-buttons') ||
+      classes.includes('login-buttons') ||
+      classes.includes('signup-buttons') ||
+      classes.includes('auth-btn');
+
+    if (shouldRemove) {
+      console.log('[AUTH] Removing legacy element:', element);
+      element.remove();
+    }
+  });
+
+  // 4. Forcer un layout stable
+  actionsZone.style.display = 'flex';
+  actionsZone.style.alignItems = 'center';
+  actionsZone.style.justifyContent = 'flex-end';
+  actionsZone.style.gap = '12px';
+  actionsZone.style.flexWrap = 'nowrap';
+  actionsZone.style.minWidth = '0';
+
+  console.log('[AUTH] Hard fix completed');
+}
+
+/**
  * Nettoie les anciens éléments d'auth du header pour éviter les chevauchements
  */
 function cleanupLegacyAuthUI() {
@@ -22952,6 +23057,9 @@ async function initAuthRoutingAndUI() {
         <a href="signup.html" class="btn btn-primary" style="font-size: 0.875em;">S'inscrire</a>
       `;
     }
+
+    // FIX CRITIQUE: Même en fallback, purger les anciens boutons
+    setTimeout(() => hardFixHeaderAuthOverlap(), 100);
     return;
   }
 
@@ -22968,6 +23076,9 @@ async function initAuthRoutingAndUI() {
 
     // Mise à jour de l'UI après résolution auth
     updateAuthUI(user);
+
+    // FIX CRITIQUE: Purge HARD des anciens boutons sur jeu.html et article.html
+    setTimeout(() => hardFixHeaderAuthOverlap(), 100);
   });
 }
 

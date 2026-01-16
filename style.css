@@ -7201,3 +7201,27 @@ header a[href*="admin"],
 header #headerAuthButtons {
     vertical-align: middle;
 }
+
+/* FIX CRITIQUE: Layout stable pour éviter chevauchements sur jeu.html/article.html */
+header {
+    overflow: visible !important;
+}
+
+.header-top:has(#headerAuthButtons) {
+    overflow: visible !important;
+}
+
+/* Forcer layout flex stable pour les zones d'actions */
+.header-right,
+.header-actions,
+.nav-actions,
+.top-right,
+.header-buttons:has(#headerAuthButtons) {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 12px !important;
+    flex-wrap: nowrap !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+}

@@ -1,0 +1,105 @@
+warning: in the working copy of 'script.js', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/script.js b/script.js[m
+[1mindex 3decfd1..355b1dc 100644[m
+[1m--- a/script.js[m
+[1m+++ b/script.js[m
+[36m@@ -7605,6 +7605,8 @@[m [mfunction saveArticlesOverride(nextArticles) {[m
+ /**[m
+  * ADDED: Source de vérité unique pour les données d'articles (admin + pages publiques)[m
+  */[m
+[32m+[m[32m// Fonctions slugify, ensureUniqueSlug et getArticleUrl existent déjà dans le code[m
+[32m+[m
+ function getArticlesData() {[m
+   const override = getArticlesOverride();[m
+   const articles = override || window.BASE_ARTICLES || [];[m
+[36m@@ -17531,6 +17533,11 @@[m [mfunction initPublicPages() {[m
+   // ADDED: Rendre les articles sur index.html[m
+   renderHomeArticles();[m
+ [m
+[32m+[m[32m  // ADDED: Initialiser la page article[m
+[32m+[m[32m  if (window.location.pathname.includes("article.html")) {[m
+[32m+[m[32m    renderArticlePage();[m
+[32m+[m[32m  }[m
+[32m+[m
+   // ADDED: Initialiser la page contact[m
+   if (window.location.pathname.includes("contact.html")) {[m
+     initContactPage();[m
+[36m@@ -18654,6 +18661,78 @@[m [mif (document.readyState === "loading") {[m
+   initApp();[m
+ }[m
+ [m
+[32m+[m[32m// ============================================[m
+[32m+[m[32m// RENDU DYNAMIQUE DE LA PAGE ARTICLE[m
+[32m+[m[32m// ============================================[m
+[32m+[m
+[32m+[m[32mfunction renderArticlePage() {[m
+[32m+[m[32m  const urlParams = new URLSearchParams(window.location.search);[m
+[32m+[m[32m  const slug = urlParams.get('slug');[m
+[32m+[m[32m  const id = urlParams.get('id');[m
+[32m+[m
+[32m+[m[32m  const articles = getArticlesData();[m
+[32m+[m[32m  let article = null;[m
+[32m+[m
+[32m+[m[32m  // Chercher par slug en priorité[m
+[32m+[m[32m  if (slug) {[m
+[32m+[m[32m    article = articles.find(a => a.slug === slug);[m
+[32m+[m[32m  }[m
+[32m+[m[32m  // Sinon chercher par id[m
+[32m+[m[32m  else if (id) {[m
+[32m+[m[32m    article = articles.find(a => a.id === id);[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  const articlePage = document.getElementById('article-page');[m
+[32m+[m[32m  if (!articlePage) return;[m
+[32m+[m
+[32m+[m[32m  if (!article) {[m
+[32m+[m[32m    // Article non trouvé[m
+[32m+[m[32m    articlePage.innerHTML = `[m
+[32m+[m[32m      <div class="article-not-found">[m
+[32m+[m[32m        <h1>Article introuvable</h1>[m
+[32m+[m[32m        <p>Cet article n'existe pas ou a été supprimé.</p>[m
+[32m+[m[32m        <a href="actu.html" class="btn btn-primary">Voir tous les articles</a>[m
+[32m+[m[32m      </div>[m
+[32m+[m[32m    `;[m
+[32m+[m[32m    return;[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  // Si trouvé par id et que l'article a un slug, canonicaliser l'URL[m
+[32m+[m[32m  if (id && article.slug && !slug) {[m
+[32m+[m[32m    const newUrl = `${window.location.pathname}?slug=${encodeURIComponent(article.slug)}`;[m
+[32m+[m[32m    history.replaceState(null, '', newUrl);[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  // Rendre l'article[m
+[32m+[m[32m  const articleHtml = `[m
+[32m+[m[32m    <article class="article-content">[m
+[32m+[m[32m      <header class="article-header">[m
+[32m+[m[32m        <h1 class="article-title">${escapeHtml(article.title)}</h1>[m
+[32m+[m[32m        <div class="article-meta">[m
+[32m+[m[32m          <time datetime="${article.date}">${formatDate(article.date)}</time>[m
+[32m+[m[32m          ${article.author ? `<span class="article-author">Par ${escapeHtml(article.author)}</span>` : ''}[m
+[32m+[m[32m        </div>[m
+[32m+[m[32m      </header>[m
+[32m+[m
+[32m+[m[32m      ${article.image ? `[m
+[32m+[m[32m        <figure class="article-image">[m
+[32m+[m[32m          <img src="${escapeHtml(article.image)}" alt="${escapeHtml(article.title)}" loading="lazy">[m
+[32m+[m[32m        </figure>[m
+[32m+[m[32m      ` : ''}[m
+[32m+[m
+[32m+[m[32m      <div class="article-body">[m
+[32m+[m[32m        ${article.content || '<p>Contenu à venir...</p>'}[m
+[32m+[m[32m      </div>[m
+[32m+[m
+[32m+[m[32m      <footer class="article-footer">[m
+[32m+[m[32m        <a href="actu.html" class="btn btn-secondary">← Retour aux articles</a>[m
+[32m+[m[32m      </footer>[m
+[32m+[m[32m    </article>[m
+[32m+[m[32m  `;[m
+[32m+[m
+[32m+[m[32m  articlePage.innerHTML = articleHtml;[m
+[32m+[m[32m}[m
+[32m+[m
+ // ============================================[m
+ // RENDU DYNAMIQUE DE LA PAGE JEU[m
+ // ============================================[m

@@ -1287,24 +1287,7 @@ header::after {
 
 /* FIX CHEVAUCHEMENT HEADER: Gestion des boutons statiques vs dynamiques */
 
-/* Quand #headerAuthButtons (dynamique) est présent, cacher les boutons statiques */
-.header-top:has(#headerAuthButtons) .header-buttons:not(#headerAuthButtons) {
-    display: none !important;
-}
-
-/* Quand #headerAuthButtons n'est pas présent, afficher les boutons statiques */
-.header-top:not(:has(#headerAuthButtons)) .header-buttons {
-    display: flex !important;
-}
-
-/* Assurer que #headerAuthButtons est toujours visible quand présent */
-#headerAuthButtons {
-    display: flex !important;
-    align-items: center !important;
-    gap: 10px !important;
-    flex-wrap: nowrap !important;
-    min-width: 0 !important;
-}
+/* RÈGLES SUPPRIMÉES - Remplacées par le système basé sur body.is-logged */
 
 /* Forcer position statique pour éviter les chevauchements */
 .header-top .header-buttons,
@@ -7200,6 +7183,47 @@ header #headerAuthButtons {
 header a[href*="admin"],
 header #headerAuthButtons {
     vertical-align: middle;
+}
+
+/* ============================================
+   AUTH HEADER STATE - SYSTÈME ROBUSTE
+   ============================================ */
+
+/* APPROCHE SIMPLIFIÉE ET ULTRA-PRORITAIRE */
+
+/* Par défaut: cacher #headerAuthButtons, montrer boutons publics */
+#headerAuthButtons {
+    display: none !important;
+}
+
+header .header-buttons:not(#headerAuthButtons) {
+    display: flex !important;
+}
+
+/* Quand connecté: montrer #headerAuthButtons, cacher boutons publics */
+body.is-logged #headerAuthButtons {
+    display: flex !important;
+}
+
+body.is-logged header .header-buttons:not(#headerAuthButtons) {
+    display: none !important;
+}
+
+/* Surcharge maximale pour garantir la priorité (spécificité très élevée) */
+html body:not(.is-logged) header #headerAuthButtons {
+    display: none !important;
+}
+
+html body:not(.is-logged) header .header-buttons:not(#headerAuthButtons) {
+    display: flex !important;
+}
+
+html body.is-logged header #headerAuthButtons {
+    display: flex !important;
+}
+
+html body.is-logged header .header-buttons:not(#headerAuthButtons) {
+    display: none !important;
 }
 
 /* FIX CRITIQUE: Layout stable pour éviter chevauchements sur jeu.html/article.html */

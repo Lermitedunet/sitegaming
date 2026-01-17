@@ -23065,21 +23065,155 @@ function renderHeaderAuthButtons(user) {
   // Si user est null, authHost reste vide
 }
 
-// FONCTION ROBUSTE POUR ENFORCER VISIBILITÉ HEADER AUTH
-function enforceHeaderAuthVisibility(isLoggedIn) {
+// VARIABLE GLOBALE POUR STOCKER L'ÉTAT DE CONNEXION
+let __LMD_LOGGED_IN_STATE = false;
+
+// FONCTION CENTRALE POUR APPLIQUER L'ÉTAT D'AUTH AU HEADER
+function applyHeaderAuthState(isLoggedIn) {
   const header = document.querySelector('header');
   if (!header) return;
 
   const authHost = document.getElementById('headerAuthButtons');
-  const containers = Array.from(header.querySelectorAll('.header-buttons'));
-  const publicContainers = containers.filter(el => el.id !== 'headerAuthButtons');
+  const all = Array.from(header.querySelectorAll('.header-buttons'));
+  const publics = all.filter(el => el.id !== 'headerAuthButtons');
+
+  // Forcer avec setProperty + important
+  if (isLoggedIn) {
+    publics.forEach(el => el.style.setProperty('display', 'none', 'important'));
+    if (authHost) authHost.style.setProperty('display', 'flex', 'important');
+  } else {
+    publics.forEach(el => el.style.setProperty('display', 'flex', 'important'));
+    if (authHost) authHost.style.setProperty('display', 'none', 'important');
+  }
+}
+
+// FONCTION POUR DÉFINIR L'ÉTAT DE CONNEXION (met à jour la globale + applique)
+function setLoggedState(isLoggedIn) {
+  __LMD_LOGGED_IN_STATE = !!isLoggedIn;
+  window.__LMD_LOGGED_IN_STATE = __LMD_LOGGED_IN_STATE; // Exposition globale si besoin
+  applyHeaderAuthState(__LMD_LOGGED_IN_STATE);
+}
+
+// SETUP DU MUTATION OBSERVER POUR ANTI-ÉCRASSEMENT
+function setupHeaderAuthObserver() {
+  const header = document.querySelector('header');
+  if (!header || header.__authObs) return;
+
+  const obs = new MutationObserver(() => {
+    applyHeaderAuthState(__LMD_LOGGED_IN_STATE);
+  });
+
+  obs.observe(header, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['style', 'class']
+  });
+
+  header.__authObs = true;
+}
+
+// SYSTÈME ROBUSTE DE SYNCHRONISATION HEADER AUTH UI
+function syncHeaderAuthUI(isLoggedIn) {
+  const header = document.querySelector('header');
+  if (!header) return;
+
+  // public containers = .header-buttons sauf #headerAuthButtons
+  const publicBoxes = Array.from(header.querySelectorAll('.header-buttons'))
+    .filter(el => el.id !== 'headerAuthButtons');
+
+  const authBox = header.querySelector('#headerAuthButtons');
+
+  // force hide/show avec attribut + style
+  publicBoxes.forEach(el => {
+    if (isLoggedIn) {
+      el.setAttribute('hidden', '');
+      el.style.display = 'none';
+      el.setAttribute('aria-hidden', 'true');
+    } else {
+      el.removeAttribute('hidden');
+      el.style.display = '';
+      el.removeAttribute('aria-hidden');
+    }
+  });
+
+  if (authBox) {
+    if (isLoggedIn) {
+      authBox.removeAttribute('hidden');
+      authBox.style.display = 'flex';
+      authBox.removeAttribute('aria-hidden');
+    } else {
+      authBox.setAttribute('hidden', '');
+      authBox.style.display = 'none';
+      authBox.setAttribute('aria-hidden', 'true');
+      // optionnel: vider si besoin
+      // authBox.innerHTML = '';
+    }
+  }
+
+  // body class pour debug et compatibilité CSS
+  document.body.classList.toggle('is-logged', !!isLoggedIn);
+}
+
+// INITIALISATION DÉFINITIVE HEADER AUTH UI (SUPPRESSION STRUCTURELLE)
+function initHeaderAuthStructure() {
+  const header = document.querySelector('header');
+  if (!header) return;
+
+  // Étape 1: Trouver les containers
+  const authBox = header.querySelector('#headerAuthButtons');
+  const publicBoxes = Array.from(header.querySelectorAll('.header-buttons'))
+    .filter(el => el.id !== 'headerAuthButtons');
+
+  // Étape 2: Si on a un public box, le sauvegarder et le supprimer
+  if (publicBoxes.length > 0) {
+    const publicBox = publicBoxes[0]; // Prendre le premier (normalement il n'y en a qu'un)
+    const publicHtml = publicBox.innerHTML.trim();
+
+    // Sauvegarder dans le dataset de authBox (ou créer authBox si nécessaire)
+    if (!authBox) {
+      // Créer authBox s'il n'existe pas
+      const newAuthBox = document.createElement('div');
+      newAuthBox.id = 'headerAuthButtons';
+      newAuthBox.className = 'header-buttons';
+      newAuthBox.dataset.publicHtml = publicHtml;
+
+      // Insérer à la place du public box
+      publicBox.parentNode.replaceChild(newAuthBox, publicBox);
+    } else {
+      // Sauvegarder dans le dataset existant
+      authBox.dataset.publicHtml = publicHtml;
+
+      // Supprimer le public box
+      publicBox.remove();
+    }
+  } else if (authBox) {
+    // Si pas de public box mais authBox existe, s'assurer qu'il a le contenu par défaut
+    if (!authBox.dataset.publicHtml) {
+      authBox.dataset.publicHtml = `
+        <a href="login.html" class="btn btn-outline" style="font-size: 0.875em;">Se connecter</a>
+        <a href="signup.html" class="btn btn-primary" style="font-size: 0.875em;">S'inscrire</a>
+      `;
+    }
+  }
+}
+
+// FONCTION DE RENDU HEADER BUTTONS (CONTENU UNIQUEMENT)
+function renderHeaderButtons(isLoggedIn) {
+  const authBox = document.querySelector('#headerAuthButtons');
+  if (!authBox) return;
 
   if (isLoggedIn) {
-    publicContainers.forEach(el => setDisp(el, 'none'));
-    setDisp(authHost, 'flex');
+    // Utilisateur connecté: Admin + avatar
+    // Cette logique peut être réutilisée depuis renderHeaderAuthButtons existante
+    // Pour l'instant, on vide et laisse renderHeaderAuthButtons faire le travail
+    authBox.innerHTML = '';
   } else {
-    publicContainers.forEach(el => setDisp(el, 'flex'));
-    setDisp(authHost, 'none');
+    // Utilisateur déconnecté: boutons Se connecter/S'inscrire
+    authBox.innerHTML = authBox.dataset.publicHtml || `
+      <a href="login.html" class="btn btn-outline" style="font-size: 0.875em;">Se connecter</a>
+      <a href="signup.html" class="btn btn-primary" style="font-size: 0.875em;">S'inscrire</a>
+    `;
   }
 }
 
@@ -23138,23 +23272,17 @@ function waitForFirebase(maxRetries = 20, interval = 100) {
  * UN SEUL onAuthStateChanged pour éviter les conflits
  */
 async function initAuthRoutingAndUI() {
+  // INITIALISATION STRUCTURELLE: Supprimer le container public, unifier sur #headerAuthButtons
+  initHeaderAuthStructure();
+
   const fb = await waitForFirebase();
 
   if (!fb) {
     // Fallback UI pour utilisateurs non connectés
-    const authButtonsContainer = getOrCreateAuthHost();
-    if (authButtonsContainer) {
-      authButtonsContainer.innerHTML = `
-        <a href="login.html" class="btn btn-outline" style="font-size: 0.875em;">Se connecter</a>
-        <a href="signup.html" class="btn btn-primary" style="font-size: 0.875em;">S'inscrire</a>
-      `;
-    }
+    renderHeaderButtons(false);
 
-    // GARANTIR CONTENU AVANT TOGGLE: En fallback, #headerAuthButtons reste vide
-    // ENFORCER VISIBILITÉ HEADER AUTH: En fallback, utilisateur non connecté
-    enforceHeaderAuthVisibility(false);
-    setTimeout(() => enforceHeaderAuthVisibility(false), 0);
-    setTimeout(() => enforceHeaderAuthVisibility(false), 50);
+    // SETUP OBSERVER ANTI-ÉCRASSEMENT (une seule fois)
+    setupHeaderAuthObserver();
 
     // FIX CRITIQUE: Même en fallback, purger les anciens boutons
     setTimeout(() => hardFixHeaderAuthOverlap(), 100);
@@ -23175,14 +23303,21 @@ async function initAuthRoutingAndUI() {
     // Mise à jour de l'UI après résolution auth
     updateAuthUI(user);
 
-    // GARANTIR CONTENU AVANT TOGGLE: Injecter d'abord le contenu dans #headerAuthButtons
-    renderHeaderAuthButtons(user);
-
-    // ENFORCER VISIBILITÉ HEADER AUTH: Puis appliquer le toggle avec timeouts
+    // RENDU HEADER BUTTONS (structure unifiée)
     const isLoggedIn = !!user;
-    enforceHeaderAuthVisibility(isLoggedIn);
-    setTimeout(() => enforceHeaderAuthVisibility(isLoggedIn), 0);
-    setTimeout(() => enforceHeaderAuthVisibility(isLoggedIn), 50);
+    renderHeaderButtons(isLoggedIn);
+
+    // GARANTIR CONTENU AUTH: Injecter Admin + avatar si connecté
+    if (isLoggedIn) {
+      renderHeaderAuthButtons(user);
+    }
+
+    // SETUP OBSERVER ANTI-ÉCRASSEMENT (une seule fois)
+    setupHeaderAuthObserver();
+
+    // SÉCURISER LE RENDU (retards pour couvrir tous les cas)
+    setTimeout(() => renderHeaderButtons(isLoggedIn), 0);
+    setTimeout(() => renderHeaderButtons(isLoggedIn), 50);
 
     // FIX CRITIQUE: Purge HARD des anciens boutons sur jeu.html et article.html
     setTimeout(() => hardFixHeaderAuthOverlap(), 100);
